@@ -1,3 +1,4 @@
+// postcss.config.js
 module.exports = {
   plugins: {
     // 🌌 Core VRABO: Tailwind
@@ -45,9 +46,9 @@ module.exports = {
     },
 
     // 🎨 Variabili automatiche (CSS custom properties)
+    // 🔥 importFrom rimosso (non più supportato)
     "postcss-custom-properties": {
       preserve: true,
-      importFrom: "./styles/variables.css",
     },
 
     // 🖼️ Ottimizzazione immagini inline (SVG, webp, avif)
@@ -57,7 +58,7 @@ module.exports = {
     // 🌍 RTL support (Right-to-Left)
     "postcss-rtlcss": {},
 
-    // 🚀 Performance e pulizia
+    // 🚀 Performance e pulizia (solo in production)
     ...(process.env.NODE_ENV === "production"
       ? {
           cssnano: {
