@@ -186,3 +186,36 @@ body.superlight .card {
 @media (min-resolution: 2dppx) {
   .img-retina { image-rendering: -webkit-optimize-contrast; }
 }
+
+/* ----------------------- 🚀 GODENGINE EXTRAS ----------------------- */
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Safe area padding (PWA + iPhone notch) */
+.safe-px {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.safe-py {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}

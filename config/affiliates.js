@@ -1,41 +1,75 @@
 // config/affiliates.js
-// Centralizzazione link affiliati Vrabo
+// =============================================
+// 🌍 VRABO Affiliate Links Config
+// - Centralizzazione link affiliati
+// - Safe fallback + validation
+// - Helper per accesso rapido
+// =============================================
+
+/**
+ * Crea un oggetto affiliato con fallback e validazione
+ * @param {string} name - Nome del partner
+ * @param {string|undefined} envVar - Variabile d'ambiente (URL affiliato)
+ * @returns {{ name: string, url: string, valid: boolean }}
+ */
+function makeAff(name, envVar) {
+  if (!envVar) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`⚠️ Affiliate link mancante per: ${name}`);
+    }
+    return { name, url: "#", valid: false };
+  }
+  return { name, url: envVar, valid: true };
+}
 
 const affiliates = {
   flights: [
-    { name: "Aviasales", url: process.env.NEXT_PUBLIC_AFF_ID_FLIGHT },
-    { name: "Kiwi", url: process.env.NEXT_PUBLIC_AFF_ID_FLIGHT2 },
+    makeAff("Aviasales", process.env.NEXT_PUBLIC_AFF_ID_FLIGHT),
+    makeAff("Kiwi", process.env.NEXT_PUBLIC_AFF_ID_FLIGHT2),
   ],
   hotels: [
-    { name: "Booking", url: process.env.NEXT_PUBLIC_AFF_ID_HOTEL },
+    makeAff("Booking", process.env.NEXT_PUBLIC_AFF_ID_HOTEL),
   ],
   cars: [
-    { name: "Localrent", url: process.env.NEXT_PUBLIC_AFF_ID_CAR },
-    { name: "Economybookings", url: process.env.NEXT_PUBLIC_AFF_ID_CAR2 },
-    { name: "QEEQ", url: process.env.NEXT_PUBLIC_AFF_ID_CAR3 },
-    { name: "GetRentacar", url: process.env.NEXT_PUBLIC_AFF_ID_CAR4 },
+    makeAff("Localrent", process.env.NEXT_PUBLIC_AFF_ID_CAR),
+    makeAff("Economybookings", process.env.NEXT_PUBLIC_AFF_ID_CAR2),
+    makeAff("QEEQ", process.env.NEXT_PUBLIC_AFF_ID_CAR3),
+    makeAff("GetRentacar", process.env.NEXT_PUBLIC_AFF_ID_CAR4),
   ],
   transfers: [
-    { name: "Kiwitaxi", url: process.env.NEXT_PUBLIC_AFF_ID_TRANSFER1 },
-    { name: "GetTransfer", url: process.env.NEXT_PUBLIC_AFF_ID_TRANSFER2 },
-    { name: "Intui", url: process.env.NEXT_PUBLIC_AFF_ID_TRANSFER3 },
+    makeAff("Kiwitaxi", process.env.NEXT_PUBLIC_AFF_ID_TRANSFER1),
+    makeAff("GetTransfer", process.env.NEXT_PUBLIC_AFF_ID_TRANSFER2),
+    makeAff("Intui", process.env.NEXT_PUBLIC_AFF_ID_TRANSFER3),
   ],
   bus: [
-    { name: "TPK Bus", url: process.env.NEXT_PUBLIC_AFF_ID_BUS },
+    makeAff("TPK Bus", process.env.NEXT_PUBLIC_AFF_ID_BUS),
   ],
   tickets: [
-    { name: "Tiqets", url: process.env.NEXT_PUBLIC_AFF_ID_TICKETS1 },
-    { name: "TicketNetwork", url: process.env.NEXT_PUBLIC_AFF_ID_TICKETS2 },
+    makeAff("Tiqets", process.env.NEXT_PUBLIC_AFF_ID_TICKETS1),
+    makeAff("TicketNetwork", process.env.NEXT_PUBLIC_AFF_ID_TICKETS2),
   ],
   connectivity: [
-    { name: "Yesim", url: process.env.NEXT_PUBLIC_AFF_ID_CONNECTIVITY1 },
-    { name: "Airalo", url: process.env.NEXT_PUBLIC_AFF_ID_CONNECTIVITY2 },
-    { name: "DrimSim", url: process.env.NEXT_PUBLIC_AFF_ID_CONNECTIVITY3 },
+    makeAff("Yesim", process.env.NEXT_PUBLIC_AFF_ID_CONNECTIVITY1),
+    makeAff("Airalo", process.env.NEXT_PUBLIC_AFF_ID_CONNECTIVITY2),
+    makeAff("DrimSim", process.env.NEXT_PUBLIC_AFF_ID_CONNECTIVITY3),
   ],
   extra: [
-    { name: "Amazon", url: process.env.NEXT_PUBLIC_AFF_ID_AMAZON },
-    { name: "NordVPN", url: process.env.NEXT_PUBLIC_AFF_ID_SOFTWARE },
+    makeAff("Amazon", process.env.NEXT_PUBLIC_AFF_ID_AMAZON),
+    makeAff("NordVPN", process.env.NEXT_PUBLIC_AFF_ID_SOFTWARE),
   ],
 };
+
+/**
+ * Ottieni affiliati per categoria
+ * @param {string} category - es. "flights" | "hotels"
+ */
+export const getAffiliatesByCategory = (category) =>
+  affiliates[category] || [];
+
+/**
+ * Ottieni tutti gli affiliati come flat array
+ */
+export const getAllAffiliates = () =>
+  Object.values(affiliates).flat();
 
 export default affiliates;

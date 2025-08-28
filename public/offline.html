@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VRABO | Offline</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #000 0%, #0a0a1f 100%);
+      color: #fff;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 3rem;
+      color: #2563eb;
+      text-shadow: 0 0 15px rgba(37, 99, 235, 0.8);
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.1rem;
+      max-width: 440px;
+      line-height: 1.6;
+      color: #ccc;
+      margin-bottom: 30px;
+    }
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+    }
+    .retry-btn {
+      padding: 12px 24px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.7);
+    }
+    .retry-btn:hover {
+      background: #1d4ed8;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.9);
+    }
+  </style>
+</head>
+<body>
+  <img src="/android-chrome-192x192.png" alt="VRABO Logo" class="logo" />
+  <h1 id="title">⚡ Sei offline</h1>
+  <p id="message">
+    VRABO funziona anche senza connessione.<br />
+    Ricollegati per tornare a confrontare le migliori offerte!
+  </p>
+  <button class="retry-btn" onclick="window.location.reload();" id="retryBtn">
+    🔄 Riprova
+  </button>
+
+  <script>
+    const translations = {
+      it: {
+        title: "⚡ Sei offline",
+        message: "VRABO funziona anche senza connessione.<br />Ricollegati per tornare a confrontare le migliori offerte!",
+        retry: "🔄 Riprova"
+      },
+      en: {
+        title: "⚡ You are offline",
+        message: "VRABO works even without connection.<br />Reconnect to compare the best deals!",
+        retry: "🔄 Retry"
+      },
+      es: {
+        title: "⚡ Estás sin conexión",
+        message: "VRABO también funciona sin conexión.<br />¡Reconéctate para comparar las mejores ofertas!",
+        retry: "🔄 Reintentar"
+      },
+      fr: {
+        title: "⚡ Vous êtes hors ligne",
+        message: "VRABO fonctionne même sans connexion.<br />Reconnectez-vous pour comparer les meilleures offres !",
+        retry: "🔄 Réessayer"
+      },
+      pt: {
+        title: "⚡ Você está offline",
+        message: "O VRABO funciona mesmo sem conexão.<br />Reconecte-se para comparar as melhores ofertas!",
+        retry: "🔄 Tentar novamente"
+      },
+      ja: {
+        title: "⚡ オフラインです",
+        message: "VRABOはオフラインでも動作します。<br />再接続して最高のお得情報を比較しましょう！",
+        retry: "🔄 再試行"
+      },
+      zh: {
+        title: "⚡ 您已离线",
+        message: "VRABO 即使在离线状态下也能运行。<br />重新连接以比较最佳优惠！",
+        retry: "🔄 重试"
+      }
+    };
+
+    // Lingua browser → solo codice base (es: "en", "it")
+    const lang = (navigator.language || "en").slice(0, 2);
+    const t = translations[lang] || translations.en;
+
+    document.documentElement.lang = lang;
+    document.getElementById("title").innerHTML = t.title;
+    document.getElementById("message").innerHTML = t.message;
+    document.getElementById("retryBtn").innerHTML = t.retry;
+  </script>
+</body>
+</html>

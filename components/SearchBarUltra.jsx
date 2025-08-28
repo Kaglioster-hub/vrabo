@@ -7,13 +7,13 @@ import { useEffect, useMemo, useRef, useState, useId } from "react";
  * - Fix focus (mai buttato fuori mentre scrivi)
  * - Ghost hint + Tab completion
  * - ARIA combobox completa
- * - Voice input, flight swap
+ * - Voice input + swap rotta voli
  * - Cache LRU + fuzzy fallback
  * - Hotkeys ("/" o Cmd+K per focus)
  * - Pinned/Recent/Popular + localStorage
  */
 
-export default function SearchBar({
+export default function SearchBarUltra({
   mode = "general",
   value,
   onChange,
@@ -65,6 +65,7 @@ export default function SearchBar({
   const uid = useId();
   const listboxId = `sb-ultra-listbox-${uid}`;
   const activeId = hi >= 0 ? `${listboxId}-row-${hi}` : undefined;
+
   // ===== Placeholder dinamico =====
   const ph = useMemo(() => {
     if (mode === "flight") return "Da/Per (es. Roma, FCO → JFK)";
@@ -106,6 +107,8 @@ export default function SearchBar({
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
+
+  // ===== Static sections =====
   const buildStaticSections = () => {
     const hist = historyRef.current;
     const sec = [];
@@ -255,6 +258,7 @@ export default function SearchBar({
         {enableVoice && <IconBtn title="Dettatura vocale" onClick={onVoice} className="hidden sm:inline">🎤</IconBtn>}
         {showClear && <IconBtn title="Pulisci" onClick={() => { setVal(""); setHint(""); setOpen(false); setHi(-1); inputRef.current?.focus(); }}>⨯</IconBtn>}
       </div>
+
       {/* Dropdown */}
       {open && (
         <div
@@ -297,7 +301,7 @@ export default function SearchBar({
                 >
                   <span className="shrink-0">{icon}</span>
                   <div className="min-w-0">
-                    <div className="truncate">{highlight(item.name, val)}</div>
+                    <div className="truncate">{highlightText(item.name, val)}</div>
                     {subtitle && (
                       <div className="text-xs text-gray-500 truncate">{subtitle}</div>
                     )}
@@ -340,6 +344,8 @@ export default function SearchBar({
     </div>
   );
 }
+
+/* --- Componenti UI --- */
 function IconBtn({ children, title, onClick, className = "" }) {
   return (
     <button
@@ -385,7 +391,8 @@ function iconFor(type) {
       return "📍";
   }
 }
-// === Helpers ===
+
+/* --- Helpers --- */
 function normalizeArray(arr) {
   return (arr || [])
     .map((x) => {
@@ -407,26 +414,6 @@ function flattenSections(sections) {
 function firstRowIndex(flat) {
   return flat.findIndex((r) => r.__type === "item");
 }
-function lastRowIndex(flat) {
-  for (let i = flat.length - 1; i >= 0; i--) if (flat[i].__type === "item") return i;
-  return -1;
-}
-function nextSelectable(flat, h) {
-  let i = h;
-  do {
-    i = (i + 1) % flat.length;
-  } while (flat[i].__type !== "item");
-  return i;
-}
-function prevSelectable(flat, h) {
-  let i = h;
-  do {
-    i = (i - 1 + flat.length) % flat.length;
-  } while (flat[i].__type !== "item");
-  return i;
-}
-
-// === Hint ===
 function validHint(val, hint) {
   if (!val || !hint) return false;
   return (
@@ -446,7 +433,7 @@ function bestHintFromSections(sections, q) {
   }
   return "";
 }
-function highlight(text, q) {
+function highlightText(text, q) {
   if (!q) return text;
   const i = text.toLowerCase().indexOf(q.toLowerCase());
   if (i < 0) return text;
@@ -474,6 +461,7 @@ function slug(s) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
+
 /* ======= LRU cache ======= */
 function LRUCache(limit = 100, ttl = 300000) {
   this.map = new Map();
@@ -535,14 +523,9 @@ function fuzzyFilterSections(sections, q) {
   const QQ = q.toLowerCase();
   const score = (name) => {
     const s = name.toLowerCase();
-    let i = 0,
-      j = 0,
-      hits = 0;
+    let i = 0, j = 0, hits = 0;
     while (i < QQ.length && j < s.length) {
-      if (QQ[i] === s[j]) {
-        hits++;
-        i++;
-      }
+      if (QQ[i] === s[j]) { hits++; i++; }
       j++;
     }
     const pref = s.startsWith(QQ) ? 100 : 0;
@@ -559,4 +542,39 @@ function fuzzyFilterSections(sections, q) {
       return { ...sec, items };
     })
     .filter((s) => s.items.length);
+}
+
+/* ======= Key handling ======= */
+function handleKeyDown(e, flat, hi, setHi, pick, doSubmit, val, hint, setVal, setOpen) {
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    const i = nextSelectable(flat, hi);
+    setHi(i);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    const i = prevSelectable(flat, hi);
+    setHi(i);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (hi >= 0) pick(flat[hi].item);
+    else if (validHint(val, hint)) setVal(hint);
+    else doSubmit();
+  } else if (e.key === "Escape") {
+    setOpen(false);
+  } else if (e.key === "Tab") {
+    if (!e.shiftKey && validHint(val, hint)) {
+      setVal(hint);
+      e.preventDefault();
+    }
+  }
+}
+function nextSelectable(flat, h) {
+  let i = h;
+  do { i = (i + 1) % flat.length; } while (flat[i].__type !== "item");
+  return i;
+}
+function prevSelectable(flat, h) {
+  let i = h;
+  do { i = (i - 1 + flat.length) % flat.length; } while (flat[i].__type !== "item");
+  return i;
 }

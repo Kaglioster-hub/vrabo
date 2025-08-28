@@ -1,0 +1,54 @@
+{
+  "name": "VRABO",
+  "short_name": "VRABO",
+  "description": "VRABO – Il comparatore dei comparatori: hotel, voli, auto, trading, finanza e molto altro.",
+  "lang": "it-IT",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "categories": ["travel", "shopping", "finance", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Homepage VRABO"
+    },
+    {
+      "src": "/screenshots/search.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Ricerca hotel & voli"
+    }
+  ]
+}

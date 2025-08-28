@@ -1,0 +1,27 @@
+# ==========================================
+# 🤖 VRABO — Robots.txt
+# Il comparatore dei comparatori
+# Ultimo aggiornamento: 2025-08-28
+# ==========================================
+
+User-agent: *
+Allow: /
+
+# --- Blocchi tecnici (evita crawl inutile) ---
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+Disallow: /vercel.svg
+Disallow: /*.zip$
+
+# --- Ottimizzazioni ---
+# Ritardo tra richieste per i crawler aggressivi
+Crawl-delay: 2
+
+# --- Sitemaps ufficiali ---
+Sitemap: https://www.vrabo.it/api/sitemap
+Sitemap: https://www.vrabo.it/sitemap.xml
+
+# --- Friendly reminder ai bot ---
+# Se sei un bot “buono”, benvenuto ✨
+# Se sei uno scraper malevolo… VRABO ti vede 👀
