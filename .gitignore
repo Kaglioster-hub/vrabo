@@ -1,35 +1,67 @@
-# Node & Logs
+# =========================================================
+# VRABO SUPREME .gitignore
+# =========================================================
+
+# --- Node & Package Managers ---
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# Next.js
+# --- Next.js Build Output ---
 .next/
-build/
 out/
+build/
 
-# Environment
+# --- Vercel / Deployment ---
+.vercel/
+*.zip
+
+# --- Env Files (keep local only) ---
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# OS files
+# --- Logs ---
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# --- System Files ---
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# IDE / Tools
+# --- IDE / Editor ---
 .vscode/
 .idea/
 *.swp
 *.swo
+*.iml
 
-# Others
-*.log
-.cache
-.vercel
-*.zip
+# --- Cache / Temp ---
+.cache/
+coverage/
+tmp/
+dist/
+storybook-static/
+
+# --- Public Assets to Ignore ---
+public/tmp/
+public/test/
+public/*.bak
+public/*.old
+
+# --- DO NOT IGNORE SOURCE ---
+!app/**
+!components/**
+!hooks/**
+!utils/**
+!public/**
+!styles/**
