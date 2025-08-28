@@ -20,18 +20,18 @@ const nextConfig = withBundleAnalyzer(
     trailingSlash: false,
     generateEtags: true,
 
+    // 🚀 Sperimentali puliti
     experimental: {
-      appDir: true,
-      serverActions: true,
       optimizePackageImports: ["recharts", "framer-motion"],
     },
 
+    // 🌍 Multilingua
     i18n: {
       locales: ["it", "en", "fr", "es", "pt", "ja", "zh"],
       defaultLocale: "it",
-      localeDetection: true,
     },
 
+    // 📸 Immagini
     images: {
       domains: [
         "images.unsplash.com",
@@ -45,6 +45,7 @@ const nextConfig = withBundleAnalyzer(
       dangerouslyAllowSVG: true,
     },
 
+    // 🛡 Headers
     async headers() {
       return [
         {
@@ -78,6 +79,7 @@ const nextConfig = withBundleAnalyzer(
       ];
     },
 
+    // 🔁 Redirects
     async redirects() {
       return [
         { source: "/privacy", destination: "/legal/privacy.html", permanent: true },
@@ -88,6 +90,7 @@ const nextConfig = withBundleAnalyzer(
       ];
     },
 
+    // 🔄 Rewrites
     async rewrites() {
       return [
         {
@@ -101,6 +104,7 @@ const nextConfig = withBundleAnalyzer(
       ];
     },
 
+    // 🔑 Variabili
     env: {
       VRABO_DEBUG: process.env.VRABO_DEBUG || "false",
       VRABO_PWA: "true",
