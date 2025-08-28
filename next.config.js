@@ -13,7 +13,6 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 const nextConfig = withBundleAnalyzer(
   withPWA({
-    // ⚡ React + build
     reactStrictMode: true,
     swcMinify: true,
     compress: true,
@@ -21,23 +20,18 @@ const nextConfig = withBundleAnalyzer(
     trailingSlash: false,
     generateEtags: true,
 
-    // 🚀 Sperimentali
     experimental: {
       appDir: true,
-      turbo: true,
       serverActions: true,
-      optimizeCss: true,
       optimizePackageImports: ["recharts", "framer-motion"],
     },
 
-    // 🌍 Multilingua avanzato
     i18n: {
       locales: ["it", "en", "fr", "es", "pt", "ja", "zh"],
       defaultLocale: "it",
       localeDetection: true,
     },
 
-    // 📸 Immagini
     images: {
       domains: [
         "images.unsplash.com",
@@ -51,7 +45,6 @@ const nextConfig = withBundleAnalyzer(
       dangerouslyAllowSVG: true,
     },
 
-    // 🛡️ Headers blindati
     async headers() {
       return [
         {
@@ -74,18 +67,17 @@ const nextConfig = withBundleAnalyzer(
                 worker-src 'self' blob:;
                 object-src 'none';
                 base-uri 'self';
-              `.replace(/\s{2,}/g, " ")
+              `.replace(/\s{2,}/g, " "),
             },
             {
               key: "Permissions-Policy",
-              value: "geolocation=(self), microphone=(), camera=(), payment=(self)"
+              value: "geolocation=(self), microphone=(), camera=(), payment=(self)",
             },
           ],
         },
       ];
     },
 
-    // 🔁 Redirects SEO + UX
     async redirects() {
       return [
         { source: "/privacy", destination: "/legal/privacy.html", permanent: true },
@@ -96,7 +88,6 @@ const nextConfig = withBundleAnalyzer(
       ];
     },
 
-    // 🔄 Rewrites Edge
     async rewrites() {
       return [
         {
@@ -110,7 +101,6 @@ const nextConfig = withBundleAnalyzer(
       ];
     },
 
-    // 🧩 Feature flags
     env: {
       VRABO_DEBUG: process.env.VRABO_DEBUG || "false",
       VRABO_PWA: "true",
