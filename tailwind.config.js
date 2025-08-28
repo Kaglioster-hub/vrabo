@@ -2,9 +2,9 @@
 module.exports = {
   darkMode: "class", // 🌗 supporto dark mode basato su classe
   content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}",
-    "./pages/**/*.{js,jsx,ts,tsx}",
+    "./app/**/*.{js,jsx,ts,tsx,mdx}",
+    "./components/**/*.{js,jsx,ts,tsx,mdx}",
+    "./pages/**/*.{js,jsx,ts,tsx,mdx}",
     "./styles/**/*.css",
   ],
   theme: {
@@ -32,20 +32,20 @@ module.exports = {
         mono: ["Fira Code", "monospace"],
       },
 
-      // 📱 Breakpoints raffinati
+      // 📱 Breakpoints extra
       screens: {
-        "xs": "420px",
+        xs: "420px",
         "3xl": "1920px",
         "4k": "2560px",
       },
 
-      // 🌌 Ombre e glow
+      // 🌌 Ombre & glow
       boxShadow: {
         glow: "0 0 20px rgba(124, 58, 237, 0.6)",
         neon: "0 0 10px #7c3aed, 0 0 20px #7c3aed, 0 0 40px #ec4899",
       },
 
-      // 🌀 Animazioni keyframes
+      // 🌀 Animazioni
       keyframes: {
         float: {
           "0%, 100%": { transform: "translateY(0)" },
@@ -61,25 +61,23 @@ module.exports = {
         pulseGlow: "pulseGlow 2s ease-in-out infinite",
       },
 
-      // 🪞 Blur e glass
+      // 🪞 Glassmorphism
       backdropBlur: {
         xs: "2px",
         xl: "20px",
       },
 
-      // 📏 Spacing esteso
+      // 📏 Spacing
       spacing: {
         128: "32rem",
         144: "36rem",
       },
     },
   },
-
-  // 🔌 Plugin extra
+  // 🔌 Plugin extra (NO line-clamp, già built-in)
   plugins: [
     require("@tailwindcss/forms"),
     require("@tailwindcss/typography"),
     require("@tailwindcss/aspect-ratio"),
-    require("@tailwindcss/line-clamp"),
   ],
 };
