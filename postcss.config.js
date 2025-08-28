@@ -1,10 +1,8 @@
 // postcss.config.js
 module.exports = {
   plugins: {
-    // 🌌 Core VRABO: Tailwind
     tailwindcss: {},
 
-    // 🔧 Autoprefixer con setup avanzato
     autoprefixer: {
       grid: "autoplace",
       flexbox: "no-2009",
@@ -16,10 +14,8 @@ module.exports = {
       ],
     },
 
-    // 🌀 Nesting SCSS-like
     "postcss-nesting": {},
 
-    // 🔮 Futuro CSS (custom props, media query ranges, color()…)
     "postcss-preset-env": {
       stage: 0,
       features: {
@@ -32,38 +28,30 @@ module.exports = {
       },
     },
 
-    // 📏 Tipografia fluida + spacing responsive
     "postcss-fluid": {
       fontSize: true,
       spacing: true,
       lineHeight: true,
     },
 
-    // 🌗 Dark/Light mode tematiche
     "postcss-dark-theme-class": {
       darkSelector: ".dark",
       lightSelector: ".light",
     },
 
-    // 🎨 Variabili automatiche (CSS custom properties)
-    // 🔥 importFrom rimosso (non più supportato)
     "postcss-custom-properties": {
-      preserve: true,
+      preserve: true, // ✅ niente più importFrom
     },
 
-    // 🖼️ Ottimizzazione immagini inline (SVG, webp, avif)
     "postcss-inline-svg": { removeFill: true },
     "postcss-image-set-function": {},
-
-    // 🌍 RTL support (Right-to-Left)
     "postcss-rtlcss": {},
 
-    // 🚀 Performance e pulizia (solo in production)
     ...(process.env.NODE_ENV === "production"
       ? {
           cssnano: {
             preset: [
-              "advanced",
+              "default", // ✅ advanced rimosso
               {
                 discardComments: { removeAll: true },
                 normalizeWhitespace: true,
