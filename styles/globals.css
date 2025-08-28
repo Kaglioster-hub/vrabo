@@ -1,0 +1,188 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================================
+   VRABO – Tailwind Globals (GODMODE ULTRA SUPREME EDITION)
+   - Glassmorphism + Gradienti dinamici
+   - Neon glow hover
+   - Dark/Light/Superlight perfetti
+   - Animazioni micro + macro
+   - Retina, PWA, Accessibility
+=========================================================== */
+
+/* ----------------------- Base & Theme ----------------------- */
+@layer base {
+  :root {
+    --ring: 59 130 246; /* blu accessibile */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-elev: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-elev-lg: 0 16px 48px rgba(0, 0, 0, 0.16);
+    --radius: 1rem;
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --grad-primary: linear-gradient(135deg, #2563eb, #7c3aed, #db2777);
+    --grad-glass: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+    --grad-dark: linear-gradient(145deg, rgba(17,24,39,0.8), rgba(0,0,0,0.9));
+  }
+
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply antialiased;
+    font-feature-settings: "kern","liga","clig","calt";
+    font-variant-ligatures: contextual common-ligatures;
+    background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+  }
+  .dark body {
+    background: radial-gradient(circle at top, #0f172a, #020617);
+  }
+
+  /* Miglior focus */
+  :focus-visible {
+    outline: 2px solid rgb(var(--ring));
+    outline-offset: 3px;
+    border-radius: var(--radius);
+  }
+
+  /* Link */
+  a {
+    @apply transition duration-150;
+    text-decoration: none;
+  }
+  a:hover {
+    opacity: 0.9;
+    text-shadow: 0 0 12px rgba(59,130,246,0.5);
+  }
+}
+
+/* ----------------------- Layout polish ----------------------- */
+.nav-shadow { box-shadow: var(--shadow-elev); }
+.hero-overlay {
+  @apply absolute inset-0 bg-black/70 backdrop-blur-md;
+}
+.video-cover { @apply absolute inset-0 w-full h-full object-cover; }
+
+/* Scrollbar moderna */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #6366f1 transparent;
+}
+*::-webkit-scrollbar { height: 10px; width: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,#6366f1,#7c3aed);
+  border-radius: 999px;
+}
+.dark *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,#9333ea,#2563eb);
+}
+
+/* ----------------------- Components ----------------------- */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold relative overflow-hidden;
+    transition: var(--transition);
+  }
+  .btn::before {
+    content: "";
+    @apply absolute inset-0 opacity-0;
+    background: var(--grad-primary);
+    transition: var(--transition);
+    z-index: 0;
+  }
+  .btn span { position: relative; z-index: 10; }
+  .btn:hover::before { opacity: 1; }
+  .btn-primary {
+    @apply btn text-white shadow-md;
+    background: #2563eb;
+  }
+  .btn-ghost {
+    @apply btn border border-gray-300 bg-white text-gray-800;
+  }
+  .btn-dark {
+    @apply btn bg-gray-900 text-white shadow;
+  }
+
+  /* Chip / Tag */
+  .chip {
+    @apply inline-flex items-center rounded-full px-4 py-1 text-xs font-medium backdrop-blur-sm;
+    background: var(--grad-glass);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  /* Card */
+  .card {
+    @apply rounded-2xl overflow-hidden relative backdrop-blur-md;
+    background: var(--grad-glass);
+    box-shadow: var(--shadow-elev);
+    transition: var(--transition);
+  }
+  .card:hover { box-shadow: var(--shadow-elev-lg); transform: translateY(-3px) scale(1.01); }
+
+  /* Inputs */
+  .input {
+    @apply w-full rounded-xl px-4 py-3 text-black shadow-sm placeholder:text-gray-400;
+    border: 1px solid rgba(0,0,0,0.1);
+    transition: var(--transition);
+  }
+  .input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.25);
+  }
+  .input-dark {
+    @apply w-full rounded-xl px-4 py-3 bg-gray-900 text-white shadow-sm placeholder:text-gray-500;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+}
+
+/* ----------------------- Datepicker ----------------------- */
+.react-datepicker {
+  @apply border rounded-xl shadow-xl overflow-hidden backdrop-blur-lg;
+}
+.dark .react-datepicker {
+  @apply bg-gray-900 text-gray-100;
+}
+.react-datepicker__header {
+  @apply bg-white dark:bg-gray-800 font-semibold;
+}
+.react-datepicker__day { @apply rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40; }
+.react-datepicker__day--selected { @apply bg-blue-600 text-white; }
+
+/* ----------------------- Superlight theme ----------------------- */
+body.superlight {
+  background: #fff !important;
+  color: #111 !important;
+}
+body.superlight .card {
+  background: #fff;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+/* ----------------------- Animazioni & Helpers ----------------------- */
+.shadow-elev    { box-shadow: var(--shadow-elev); }
+.shadow-elev-lg { box-shadow: var(--shadow-elev-lg); }
+
+.hover-scale { transition: var(--transition); }
+.hover-scale:hover { transform: translateY(-3px) scale(1.02); }
+
+.neon-glow { text-shadow: 0 0 8px #6366f1, 0 0 16px #7c3aed; }
+
+.fade-in { animation: fadeIn 0.6s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.float-y { animation: floatY 3s ease-in-out infinite; }
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Retina images */
+@media (min-resolution: 2dppx) {
+  .img-retina { image-rendering: -webkit-optimize-contrast; }
+}
