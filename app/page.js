@@ -608,38 +608,39 @@ export default function Home() {
 
   // Tastiera su input/tendina
   const handleKey = (e) => {
-    if (isComposing) return;
-    if (!showSgs || sugs.length === 0) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        doSearch();
-      }
-      if (e.key === "Escape") setShowSugs(false);
-      return;
+  if (isComposing) return;
+  if (!showSugs || sugs.length === 0) {   // 👈 correggere qui
+    if (e.key === "Enter") {
+      e.preventDefault();
+      doSearch();
     }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlight((h) => (h + 1) % sugs.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlight((h) => (h - 1 + sugs.length) % sugs.length);
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (highlight >= 0) pickSuggestion(sugs[highlight]);
-      else doSearch();
-    } else if (e.key === "Escape") {
+    if (e.key === "Escape") setShowSugs(false);
+    return;
+  }
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    setHighlight((h) => (h + 1) % sugs.length);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    setHighlight((h) => (h - 1 + sugs.length) % sugs.length);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (highlight >= 0) pickSuggestion(sugs[highlight]);
+    else doSearch();
+  } else if (e.key === "Escape") {
+    setShowSugs(false);
+  } else if (e.key === "Tab") {
+    if (
+      !e.shiftKey &&
+      sugs[0]?.name?.toLowerCase()?.startsWith(query.toLowerCase())
+    ) {
+      setQuery(sugs[0].name);
+      setSelectedSug(sugs[0]);
       setShowSugs(false);
-    } else if (e.key === "Tab") {
-      if (
-        !e.shiftKey &&
-        sugs[0]?.name?.toLowerCase()?.startsWith(query.toLowerCase())
-      ) {
-        setQuery(sugs[0].name);
-        setSelectedSug(sugs[0]);
-        setShowSugs(false);
-      }
     }
-  };
+  }
+};
+
 
   // Voice input
   const voiceInput = () => {
