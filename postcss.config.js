@@ -1,8 +1,10 @@
 // postcss.config.js
 module.exports = {
   plugins: {
+    // 🔹 Core
     tailwindcss: {},
 
+    // 🔹 Autoprefixer avanzato
     autoprefixer: {
       grid: "autoplace",
       flexbox: "no-2009",
@@ -14,8 +16,10 @@ module.exports = {
       ],
     },
 
+    // 🔹 Nesting moderno (stile SCSS)
     "postcss-nesting": {},
 
+    // 🔹 Feature CSS future
     "postcss-preset-env": {
       stage: 0,
       features: {
@@ -28,30 +32,37 @@ module.exports = {
       },
     },
 
+    // 🔹 Tipografia fluida
     "postcss-fluid": {
       fontSize: true,
       spacing: true,
       lineHeight: true,
     },
 
+    // 🔹 Dark/Light mode
     "postcss-dark-theme-class": {
       darkSelector: ".dark",
       lightSelector: ".light",
     },
 
-    "postcss-custom-properties": {
-      preserve: true, // ✅ niente più importFrom
-    },
+    // 🔹 Custom properties senza importFrom
+    "postcss-custom-properties": { preserve: true },
 
+    // 🔹 Utility extra
     "postcss-inline-svg": { removeFill: true },
     "postcss-image-set-function": {},
     "postcss-rtlcss": {},
 
+    // 🔹 FIX e compatibilità cross-browser
+    "postcss-flexbugs-fixes": {},  // 🔥 corregge bug Flexbox
+    "postcss-normalize": {},       // 🔥 reset CSS moderno
+
+    // 🔹 Ottimizzazione in produzione
     ...(process.env.NODE_ENV === "production"
       ? {
           cssnano: {
             preset: [
-              "default", // ✅ advanced rimosso
+              "default",
               {
                 discardComments: { removeAll: true },
                 normalizeWhitespace: true,

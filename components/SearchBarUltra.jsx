@@ -1,19 +1,22 @@
 "use client";
 import { useEffect, useMemo, useRef, useState, useId } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 /**
- * SearchBarUltra — SUPREME STABLE EDITION
- * ---------------------------------------
- * - Fix focus (mai buttato fuori mentre scrivi)
+ * SearchBarUltraPro — MEGA UNIFICATA EDITION ⚡
+ * --------------------------------------------
+ * - Modalità dinamiche: general, flight, hotel/bnb, car
+ * - Suggerimenti con cache/fuzzy
+ * - ARIA combobox + aria-live
  * - Ghost hint + Tab completion
- * - ARIA combobox completa
- * - Voice input + swap rotta voli
- * - Cache LRU + fuzzy fallback
- * - Hotkeys ("/" o Cmd+K per focus)
- * - Pinned/Recent/Popular + localStorage
+ * - Hotkeys (/ Cmd+K), Voice input, Swap voli
+ * - Recent/Popular/Pinned con localStorage
+ * - Responsive grid con controlli multipli
+ * - Sicura, accessibile, performante
  */
 
-export default function SearchBarUltra({
+export default function SearchBarUltraPro({
   mode = "general",
   value,
   onChange,
@@ -25,8 +28,8 @@ export default function SearchBarUltra({
   placeholder = "Cerca destinazione o servizio…",
   className = "",
   suggestUrl = "/api/suggest",
-  debounceMs = 200,
-  minChars = 3,
+  debounceMs = 250,
+  minChars = 2,
   maxResults = 50,
   preloadOnFocus = true,
   enableVoice = true,
@@ -34,24 +37,29 @@ export default function SearchBarUltra({
   storageKey = "vrabo.search.recent",
   historyMax = 12,
   onError,
-  onMetrics,
 }) {
-  // ===== Controlled/uncontrolled =====
+  // ============= STATE =============
   const [inner, setInner] = useState("");
   const val = (value ?? inner).toString();
   const setVal = (v) => (onChange ? onChange(v) : setInner(v));
 
-  // ===== State =====
   const [open, setOpen] = useState(false);
   const [sections, setSections] = useState([]);
   const [flat, setFlat] = useState([]);
   const [hi, setHi] = useState(-1);
   const [loading, setLoading] = useState(false);
   const [hint, setHint] = useState("");
-  const [composition, setComposition] = useState(false);
   const [errMsg, setErrMsg] = useState("");
 
-  // ===== Refs =====
+  // Multi-field states (flight/hotel/car)
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [dest, setDest] = useState("");
+  const [pickup, setPickup] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  // ============= REFS =============
   const abortRef = useRef(null);
   const debRef = useRef(null);
   const boxRef = useRef(null);
@@ -66,15 +74,15 @@ export default function SearchBarUltra({
   const listboxId = `sb-ultra-listbox-${uid}`;
   const activeId = hi >= 0 ? `${listboxId}-row-${hi}` : undefined;
 
-  // ===== Placeholder dinamico =====
+  // ============= PLACEHOLDER dinamico =============
   const ph = useMemo(() => {
-    if (mode === "flight") return "Da/Per (es. Roma, FCO → JFK)";
-    if (mode === "car") return "Punto ritiro (es. Milano Centrale)";
+    if (mode === "flight") return "Da/Per (es. Roma FCO → JFK)";
+    if (mode === "car") return "Punto ritiro auto";
     if (mode === "bnb" || mode === "hotel") return "Città/Hotel (es. Firenze – Duomo)";
     return placeholder;
   }, [mode, placeholder]);
 
-  // ===== Hotkeys =====
+  // ============= HOTKEYS globali =============
   useEffect(() => {
     if (!hotkeys) return;
     const onKey = (e) => {
@@ -90,7 +98,7 @@ export default function SearchBarUltra({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, hotkeys]);
 
-  // ===== Cleanup =====
+  // ============= Cleanup =============
   useEffect(() => {
     return () => {
       clearTimeout(debRef.current);
@@ -98,7 +106,7 @@ export default function SearchBarUltra({
     };
   }, []);
 
-  // ===== Click esterno chiude =====
+  // ============= Click esterno chiude =============
   useEffect(() => {
     function onDoc(e) {
       if (!boxRef.current) return;
@@ -108,7 +116,7 @@ export default function SearchBarUltra({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  // ===== Static sections =====
+  // ============= Static sections (recent/popular/pinned) =============
   const buildStaticSections = () => {
     const hist = historyRef.current;
     const sec = [];
@@ -126,8 +134,9 @@ export default function SearchBarUltra({
     setOpen(secs.some((s) => s.items.length > 0));
   };
 
-  // ===== Suggest fetch =====
+  // ============= FETCH Suggest =============
   useEffect(() => {
+    if (mode !== "general") return; // Suggerimenti solo per campo general
     if (!val.trim()) {
       setErrMsg("");
       setHint("");
@@ -180,7 +189,7 @@ export default function SearchBarUltra({
           setSections(secs); setFlat(flattenSections(secs));
           setHint(bestHintFromSections(secs, q)); setHi(-1);
           setOpen(secs.some((s) => s.items.length));
-          setErrMsg("Connessione lenta, mostro risultati locali.");
+          setErrMsg("⚠️ Connessione lenta, fallback locale.");
           onError?.(err);
         }
       } finally {
@@ -205,190 +214,208 @@ export default function SearchBarUltra({
     setOpen(secs.some((s) => s.items.length));
     setErrMsg("");
   }
-  const doSubmit = () => { setOpen(false); saveHistory(storageKey, historyRef, val, historyMax); onSubmit?.(val); };
-  const pick = (item) => { const name = item?.name ?? ""; if (!name) return; setVal(name); setOpen(false); setHint(""); saveHistory(storageKey, historyRef, name, historyMax); onPick?.(item); onSubmit?.(name); };
 
-  const sepRe = useMemo(() => /→|->|—|–|-|>|➔|↦|⇒|to/iu, []);
-  const canSwap = useMemo(() => mode === "flight" && sepRe.test(val), [mode, val, sepRe]);
-  const onSwap = () => { if (!canSwap) return; const [a, b] = val.split(sepRe).map((s) => s.trim()).filter(Boolean); if (a && b) setVal(`${b} → ${a}`); };
+  // ============= Submit handler =============
+  const doSubmit = () => {
+    let payload = {};
+    if (mode === "flight") payload = { from, to, depart: startDate, return: endDate };
+    else if (mode === "hotel" || mode === "bnb") payload = { dest, checkin: startDate, checkout: endDate };
+    else if (mode === "car") payload = { pickup, from: startDate, to: endDate };
+    else payload = { query: val };
+
+    saveHistory(storageKey, historyRef, val, historyMax);
+    onSubmit?.(payload);
+    setOpen(false);
+  };
+
+  const pick = (item) => {
+    const name = item?.name ?? "";
+    if (!name) return;
+    setVal(name);
+    setOpen(false);
+    setHint("");
+    saveHistory(storageKey, historyRef, name, historyMax);
+    onPick?.(item);
+    onSubmit?.(name);
+  };
+
+  const swapFlight = () => {
+    if (mode !== "flight") return;
+    setFrom(to);
+    setTo(from);
+  };
 
   const onVoice = () => {
     if (!enableVoice) return;
     const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SR) return;
-    try { const rec = new SR(); rec.lang = "it-IT"; rec.onresult = (ev) => { const t = ev?.results?.[0]?.[0]?.transcript || ""; if (t) setVal(t); }; rec.start(); } catch (e) { onError?.(e); }
+    try {
+      const rec = new SR();
+      rec.lang = "it-IT";
+      rec.onresult = (ev) => {
+        const t = ev?.results?.[0]?.[0]?.transcript || "";
+        if (t) {
+          if (mode === "general") setVal(t);
+          else setDest(t);
+        }
+      };
+      rec.start();
+    } catch (e) {
+      onError?.(e);
+    }
   };
 
-  const showClear = !!val;
-  const hasAny = flat.some((row) => row.__type === "item");
+  const showClear = mode === "general" ? !!val : !!dest;
 
+  // ============= RENDER =============
   return (
-    <div className={`relative ${className}`} ref={boxRef}>
-      {/* Ghost hint */}
-      <div className="absolute inset-y-0 left-4 right-28 flex items-center pointer-events-none z-0">
-        <span className="truncate text-gray-400 select-none">
-          <span className="invisible">{val}</span>
-          <span className="opacity-40">{validHint(val, hint) ? hint.slice(val.length) : ""}</span>
-        </span>
-      </div>
+    <div className={`relative w-full p-4 rounded-xl shadow-lg bg-white dark:bg-gray-900 ${className}`} ref={boxRef}>
+      {/* --- MODE: general con suggerimenti --- */}
+      {mode === "general" && (
+        <>
+          <div className="relative">
+            {/* Ghost hint */}
+            <div className="absolute inset-y-0 left-4 right-28 flex items-center pointer-events-none z-0">
+              <span className="truncate text-gray-400 select-none">
+                <span className="invisible">{val}</span>
+                <span className="opacity-40">{validHint(val, hint) ? hint.slice(val.length) : ""}</span>
+              </span>
+            </div>
 
-      {/* Input */}
-      <input
-        ref={inputRef}
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        onFocus={() => { if (!val.trim() && preloadOnFocus) openStaticIfAny(); else setOpen(hasAny); }}
-        onBlur={() => { requestAnimationFrame(() => { if (!boxRef.current?.contains(document.activeElement)) setOpen(false); }); }}
-        onKeyDown={(e) => handleKeyDown(e, flat, hi, setHi, pick, doSubmit, val, hint, setVal, setOpen)}
-        onCompositionStart={() => setComposition(true)}
-        onCompositionEnd={() => setComposition(false)}
-        placeholder={ph}
-        autoComplete="off"
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={listboxId}
-        aria-activedescendant={activeId}
-        aria-autocomplete="list"
-        className="w-full pr-28 pl-4 py-3 rounded-lg border shadow-sm bg-white text-black dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none relative z-10"
-      />
+            {/* Input principale */}
+            <input
+              ref={inputRef}
+              value={val}
+              onChange={(e) => setVal(e.target.value)}
+              onFocus={() => { if (!val.trim() && preloadOnFocus) openStaticIfAny(); else setOpen(flat.length > 0); }}
+              onBlur={() => { requestAnimationFrame(() => { if (!boxRef.current?.contains(document.activeElement)) setOpen(false); }); }}
+              onKeyDown={(e) => handleKeyDown(e, flat, hi, setHi, pick, doSubmit, val, hint, setVal, setOpen)}
+              placeholder={ph}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={open}
+              aria-controls={listboxId}
+              aria-activedescendant={activeId}
+              aria-autocomplete="list"
+              className="w-full pr-28 pl-4 py-3 rounded-lg border shadow-sm bg-white text-black dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none relative z-10"
+            />
 
-      {/* Controls */}
-      <div className="absolute inset-y-0 right-2 flex items-center gap-1 z-20">
-        {canSwap && <IconBtn title="Inverti rotta" onClick={onSwap}>⇄</IconBtn>}
-        {enableVoice && <IconBtn title="Dettatura vocale" onClick={onVoice} className="hidden sm:inline">🎤</IconBtn>}
-        {showClear && <IconBtn title="Pulisci" onClick={() => { setVal(""); setHint(""); setOpen(false); setHi(-1); inputRef.current?.focus(); }}>⨯</IconBtn>}
-      </div>
+            {/* Controls */}
+            <div className="absolute inset-y-0 right-2 flex items-center gap-1 z-20">
+              {enableVoice && <IconBtn title="Dettatura vocale" onClick={onVoice}>🎤</IconBtn>}
+              {showClear && <IconBtn title="Pulisci" onClick={() => { setVal(""); setHint(""); setOpen(false); setHi(-1); inputRef.current?.focus(); }}>⨯</IconBtn>}
+            </div>
 
-      {/* Dropdown */}
-      {open && (
-        <div
-          id={listboxId}
-          ref={listRef}
-          role="listbox"
-          className="absolute z-50 mt-2 w-full max-h-96 overflow-auto bg-white dark:bg-gray-800 border rounded-xl shadow-xl"
-        >
-          {loading && <RowInfo text="Carico suggerimenti…" />}
-          {!loading && !hasAny && <RowInfo text={errMsg || "Nessun risultato"} />}
+            {/* Dropdown */}
+            {open && (
+              <div
+                id={listboxId}
+                ref={listRef}
+                role="listbox"
+                aria-live="polite"
+                className="absolute z-50 mt-2 w-full max-h-96 overflow-auto bg-white dark:bg-gray-800 border rounded-xl shadow-xl"
+              >
+                {loading && <RowInfo text="⏳ Carico suggerimenti…" />}
+                {!loading && !flat.some((r) => r.__type === "item") && <RowInfo text={errMsg || "Nessun risultato"} />}
 
-          {!loading &&
-            flat.map((row, idx) => {
-              if (row.__type === "header") {
-                return (
-                  <div
-                    key={row.key}
-                    className="px-3 py-1 text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur z-10"
-                  >
-                    {row.title}
-                  </div>
-                );
-              }
-              const active = idx === hi;
-              const item = row.item;
-              const subtitle = [item.country, item.code].filter(Boolean).join(" · ");
-              const icon = iconFor(item.type || guessType(item, mode));
-              return (
-                <div
-                  id={`${listboxId}-row-${idx}`}
-                  key={`${item.key}-${idx}`}
-                  role="option"
-                  aria-selected={active}
-                  onMouseDown={(e) => e.preventDefault()}   // 👈 evita blur
-                  onMouseEnter={() => setHi(idx)}
-                  onClick={() => pick(item)}
-                  className={`px-4 py-2 cursor-pointer flex items-center gap-2 ${
-                    active ? "bg-blue-50 dark:bg-gray-700" : ""
-                  }`}
-                >
-                  <span className="shrink-0">{icon}</span>
-                  <div className="min-w-0">
-                    <div className="truncate">{highlightText(item.name, val)}</div>
-                    {subtitle && (
-                      <div className="text-xs text-gray-500 truncate">{subtitle}</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                {!loading &&
+                  flat.map((row, idx) => {
+                    if (row.__type === "header") {
+                      return (
+                        <div
+                          key={row.key}
+                          className="px-3 py-1 text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur z-10"
+                        >
+                          {row.title}
+                        </div>
+                      );
+                    }
+                    const active = idx === hi;
+                    const item = row.item;
+                    const subtitle = [item.country, item.code].filter(Boolean).join(" · ");
+                    const icon = iconFor(item.type || guessType(item, mode));
+                    return (
+                      <div
+                        id={`${listboxId}-row-${idx}`}
+                        key={`${item.key}-${idx}`}
+                        role="option"
+                        aria-selected={active}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onMouseEnter={() => setHi(idx)}
+                        onClick={() => pick(item)}
+                        className={`px-4 py-2 cursor-pointer flex items-center gap-2 ${active ? "bg-blue-50 dark:bg-gray-700" : ""}`}
+                      >
+                        <span className="shrink-0">{icon}</span>
+                        <div className="min-w-0">
+                          <div className="truncate">{highlightText(item.name, val)}</div>
+                          {subtitle && <div className="text-xs text-gray-500 truncate">{subtitle}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* --- MODE: flight --- */}
+      {mode === "flight" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 relative">
+          <input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Da (es. Roma FCO)" className="input" />
+          <input value={to} onChange={(e) => setTo(e.target.value)} placeholder="A (es. New York JFK)" className="input" />
+          <DatePicker selected={startDate} onChange={setStartDate} placeholderText="Partenza" minDate={new Date()} className="input" />
+          <DatePicker selected={endDate} onChange={setEndDate} placeholderText="Ritorno (opzionale)" minDate={startDate || new Date()} className="input" />
+          <button onClick={swapFlight} className="absolute right-3 -top-5 bg-gray-200 dark:bg-gray-700 p-1 rounded-md" title="Inverti">⇄</button>
         </div>
       )}
 
-      {/* Chips (quando input vuoto) */}
-      {!val && (recent?.length || popular?.length || pinned?.length) && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {normalizeArray(pinned).slice(0, 6).map((r, i) => (
-            <Chip
-              key={`pin-${i}-${r.key}`}
-              label={r.name}
-              title="Consigliato"
-              onClick={() => pick(r)}
-            />
-          ))}
-          {normalizeArray(recent).slice(0, 6).map((r, i) => (
-            <Chip
-              key={`rec-${i}-${r.key}`}
-              label={r.name}
-              title="Recente"
-              onClick={() => pick(r)}
-            />
-          ))}
-          {normalizeArray(popular).slice(0, 8).map((c, i) => (
-            <Chip
-              key={`pop-${i}-${c.key}`}
-              label={c.name}
-              title="Popolare"
-              onClick={() => pick(c)}
-            />
-          ))}
+      {/* --- MODE: hotel/bnb --- */}
+      {(mode === "hotel" || mode === "bnb") && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input value={dest} onChange={(e) => setDest(e.target.value)} placeholder="Dove (es. Firenze Duomo)" className="input" />
+          <DatePicker selected={startDate} onChange={setStartDate} placeholderText="Check-in" minDate={new Date()} className="input" />
+          <DatePicker selected={endDate} onChange={setEndDate} placeholderText="Check-out" minDate={startDate || new Date()} className="input" />
         </div>
       )}
+
+      {/* --- MODE: car --- */}
+      {mode === "car" && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="Punto ritiro" className="input" />
+          <DatePicker selected={startDate} onChange={setStartDate} placeholderText="Data ritiro" minDate={new Date()} className="input" />
+          <DatePicker selected={endDate} onChange={setEndDate} placeholderText="Data riconsegna" minDate={startDate || new Date()} className="input" />
+        </div>
+      )}
+
+      {/* --- Bottone cerca --- */}
+      <div className="mt-3 flex justify-end">
+        <button onClick={doSubmit} className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">Cerca →</button>
+      </div>
     </div>
   );
 }
 
-/* --- Componenti UI --- */
+/* --- UI helpers --- */
 function IconBtn({ children, title, onClick, className = "" }) {
   return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      className={`px-2 py-1 text-sm rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 ${className}`}
-    >
+    <button type="button" title={title} onClick={onClick}
+      className={`px-2 py-1 text-sm rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 ${className}`}>
       {children}
     </button>
   );
 }
-function Chip({ label, onClick, title }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className="px-2 py-1 rounded-full text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-    >
-      {label}
-    </button>
-  );
-}
 function RowInfo({ text }) {
-  return (
-    <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{text}</div>
-  );
+  return <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{text}</div>;
 }
 function iconFor(type) {
   switch (type) {
-    case "airport":
-      return "🛫";
-    case "city":
-      return "🏙️";
-    case "hotel":
-      return "🏨";
-    case "car":
-      return "🚗";
-    case "train":
-      return "🚆";
-    default:
-      return "📍";
+    case "airport": return "🛫";
+    case "city": return "🏙️";
+    case "hotel": return "🏨";
+    case "car": return "🚗";
+    case "train": return "🚆";
+    default: return "📍";
   }
 }
 
@@ -578,3 +605,7 @@ function prevSelectable(flat, h) {
   do { i = (i - 1 + flat.length) % flat.length; } while (flat[i].__type !== "item");
   return i;
 }
+
+/* ======= Styling helper (Tailwind apply) ======= */
+const inputStyle =
+  "w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
