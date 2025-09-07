@@ -2,16 +2,13 @@
 import { useState, useMemo } from "react";
 import QRCode from "react-qr-code";
 
-// ======================= CONFIG DONAZIONI =======================
 const PAYPAL_EMAIL = "donations@vrabo.it";
 const VRABO_WALLET = "0xe77E6C411F2ee01F1cfbccCb1c418c80F1a534fe";
 
-// Stripe Payment Link predefinito (customer chooses price)
 const STRIPE_LINK_DEFAULT =
   process.env.NEXT_PUBLIC_STRIPE_LINK ||
   "https://buy.stripe.com/test_xxxxxxxxxxxxxxx";
 
-// Opzionali: Payment link fissi per importi specifici
 const STRIPE_LINKS_BY_AMOUNT = {
   // 5: "https://buy.stripe.com/test_link5euro",
   // 10: "https://buy.stripe.com/test_link10euro",
@@ -24,11 +21,9 @@ const CHAINS = [
   { id: 56, symbol: "BNB", name: "BNB Smart Chain" },
 ];
 
-// Helpers
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const round2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
 
-// Amount → wei string
 function amountToWeiStr(amount, decimals = 18) {
   const str = String(amount ?? "0").trim();
   if (!/^\d+(\.\d+)?$/.test(str)) return "0";
@@ -39,10 +34,9 @@ function amountToWeiStr(amount, decimals = 18) {
   return wei.toString();
 }
 
-// ======================= COMPONENTE =======================
 export default function Donations() {
-  const [amount, setAmount] = useState(10); // € default
-  const [chain, setChain] = useState(CHAINS[0]); // ETH
+  const [amount, setAmount] = useState(10);
+  const [chain, setChain] = useState(CHAINS[0]);
   const [copied, setCopied] = useState(false);
 
   const quick = [5, 10, 25, 50];
@@ -50,11 +44,9 @@ export default function Donations() {
   const onQuick = (v) => setAmount(v);
   const onSlide = (e) => setAmount(round2(e.target.value));
   const onInput = (e) =>
-    setAmount(
-      round2(clamp(Number(String(e.target.value).slice(0, 8)), 0, 10000))
-    );
+    setAmount(round2(clamp(Number(String(e.target.value).slice(0, 8)), 0, 10000)));
 
-  // ------- PayPal -------
+  // PayPal
   const paypalUrl = useMemo(() => {
     const p = new URL("https://www.paypal.com/donate");
     p.searchParams.set("business", PAYPAL_EMAIL);
@@ -64,13 +56,14 @@ export default function Donations() {
     return p.toString();
   }, [amount]);
 
-  // ------- Stripe -------
+  // Stripe
   function openStripe() {
     const link = STRIPE_LINKS_BY_AMOUNT[amount] || STRIPE_LINK_DEFAULT;
     window.open(link, "_blank", "noopener,noreferrer");
   }
+  const stripeHighlight = STRIPE_LINKS_BY_AMOUNT[amount];
 
-  // ------- Crypto / MetaMask -------
+  // Crypto
   const weiStr = amountToWeiStr(amount);
   const eip681 = `ethereum:${VRABO_WALLET}@${chain.id}?value=${weiStr}`;
   const metamaskMobile = `${METAMASK_APP_BASE}/${VRABO_WALLET}@${chain.id}?value=${weiStr}`;
@@ -97,7 +90,7 @@ export default function Donations() {
           <button
             key={q}
             onClick={() => onQuick(q)}
-            className={`px-4 py-2 rounded-full border ${
+            className={`px-4 py-2 rounded-full border transition ${
               amount === q
                 ? "bg-blue-600 text-white border-blue-600"
                 : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
@@ -109,7 +102,7 @@ export default function Donations() {
       </div>
 
       {/* Slider + input */}
-      <div className="flex items-center gap-4 justify-center mb-2">
+      <div className="flex flex-col sm:flex-row items-center gap-4 justify-center mb-4">
         <input
           type="range"
           min="1"
@@ -139,19 +132,25 @@ export default function Donations() {
           href={paypalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
+          aria-label="Dona con PayPal"
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow focus:ring-2 focus:ring-offset-2 focus:ring-blue-400"
         >
           PayPal
         </a>
 
         <button
           onClick={openStripe}
-          className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-semibold shadow"
+          aria-label="Dona con Stripe"
+          className={`px-6 py-3 rounded-lg text-white font-semibold shadow focus:ring-2 focus:ring-offset-2 ${
+            stripeHighlight
+              ? "bg-purple-700 hover:bg-purple-800"
+              : "bg-purple-600 hover:bg-purple-700"
+          }`}
         >
           Stripe
         </button>
 
-        {/* Selettore rete + deep-link MetaMask */}
+        {/* Crypto: rete + deep link */}
         <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2">
           <select
             value={chain.id}
@@ -173,25 +172,25 @@ export default function Donations() {
             href={metamaskMobile}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Apri MetaMask mobile"
             className="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-md text-white text-sm"
-            title="Apri MetaMask mobile"
           >
             MetaMask
           </a>
           <a
             href={eip681}
+            aria-label="Apri link EIP-681"
             className="px-3 py-2 bg-green-700 hover:bg-green-800 rounded-md text-white text-sm"
-            title="Protocollo EIP-681"
           >
             ethereum:
           </a>
         </div>
       </div>
 
-      {/* Card Crypto: QR + copia */}
+      {/* Card Crypto */}
       <div className="grid sm:grid-cols-[180px_1fr] gap-4 items-center">
         <div className="bg-white p-3 rounded-xl border shadow-sm w-[180px] h-[180px] flex items-center justify-center">
-          <QRCode value={VRABO_WALLET} size={150} />
+          <QRCode value={eip681} size={150} />
         </div>
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -200,14 +199,15 @@ export default function Donations() {
             </code>
             <button
               onClick={copyAddr}
-              className="px-3 py-2 rounded-md bg-gray-200 dark:bg-gray-700"
+              title="Copia indirizzo"
+              className="px-3 py-2 rounded-md bg-gray-200 dark:bg-gray-700 focus:ring-2 focus:ring-blue-400"
             >
               {copied ? "Copiato ✓" : "Copia"}
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
             Invia {chain.symbol} sulla rete {chain.name}. L’importo scelto ({amount}
-            €) viene convertito in **wei** nel deep-link (EIP-681).
+            €) viene convertito in wei nel deep-link (EIP-681).
           </p>
         </div>
       </div>

@@ -1,4 +1,3 @@
-// app/layout.js
 import "../styles/globals.css";
 import Script from "next/script";
 import i18next from "i18next";
@@ -81,55 +80,6 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang={lng} dir="ltr">
-      <head>
-        {/* SEO & PWA Essentials */}
-        <meta charSet="UTF-8" />
-        <meta
-          name="robots"
-          content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
-        />
-        <meta name="author" content="VRABO Team" />
-        <meta name="publisher" content="VRABO" />
-        <meta name="application-name" content="VRABO" />
-        <meta name="apple-mobile-web-app-title" content="VRABO" />
-        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="referrer" content="strict-origin-when-cross-origin" />
-
-        {/* PWA */}
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta
-          name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
-        />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <link rel="mask-icon" href="/icon.svg" color="#0f172a" />
-
-        {/* Preload font principale */}
-        <link
-          rel="preload"
-          href="/fonts/Inter-Variable.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-
-        {/* Preconnect & Prefetch */}
-        <link
-          rel="preconnect"
-          href="https://api.travelpayouts.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://api.travelpayouts.com" />
-        <link
-          rel="preconnect"
-          href="https://images.unsplash.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-      </head>
       <body className="bg-gray-100 dark:bg-black text-gray-900 dark:text-gray-100 font-sans antialiased">
         {children}
 
@@ -154,7 +104,7 @@ export default function RootLayout({ children }) {
           })}
         </Script>
 
-        {/* Service Worker con next/script */}
+        {/* Service Worker */}
         <Script id="pwa-sw" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {

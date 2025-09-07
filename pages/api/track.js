@@ -117,14 +117,20 @@ export default async function handler(req, res) {
       raw = Buffer.from(b64, "base64").toString("utf8");
     } catch {}
   }
-  if (!raw) return res.redirect(302, "/");
+
+  // FIX: invalid / empty / hash-only → redirect home
+  if (!raw || raw === "#" || raw.toLowerCase() === "null") {
+    return res.redirect(302, "/");
+  }
 
   // 2. Verify HMAC
   if (!verify(raw, sig)) return res.status(400).json({ error: "Invalid signature" });
 
   // 3. Normalize
   const finalUrl = safeURL(raw);
-  if (!finalUrl) return res.redirect(302, "/");
+  if (!finalUrl || finalUrl === "#" || finalUrl === "https://") {
+    return res.redirect(302, "/");
+  }
 
   // 4. Prevent loops
   if (finalUrl.startsWith("/api/track")) return res.status(400).json({ error: "Loop detected" });

@@ -6,13 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rimraf .next node_modules",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^15.5.2",
     "framer-motion": "^10.18.0",
     "i18next": "^25.4.0",
     "i18next-browser-languagedetector": "^8.2.0",
+    "lru-cache": "^10.0.0",
     "next": "^14.2.32",
     "react": "^18.2.0",
     "react-datepicker": "^8.7.0",
@@ -20,13 +23,14 @@
     "react-i18next": "^15.7.1",
     "react-qr-code": "^2.0.18",
     "recharts": "^3.1.2",
+    "rimraf": "^5.0.5",
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/typography": "^0.5.16",
     "autoprefixer": "^10.4.21",
     "cssnano": "^7.1.1",
@@ -43,11 +47,23 @@
     "postcss-nesting": "^13.0.2",
     "postcss-normalize": "^13.0.1",
     "postcss-preset-env": "^10.3.1",
-    "postcss-rtlcss": "^5.7.1"
+    "postcss-rtlcss": "^5.7.1",
+    "workbox-core": "^7.0.0",
+    "workbox-cacheable-response": "^7.0.0",
+    "workbox-google-analytics": "^7.0.0",
+    "workbox-routing": "^7.0.0",
+    "workbox-strategies": "^7.0.0",
+    "workbox-precaching": "^7.0.0",
+    "workbox-background-sync": "^7.0.0"
   },
   "main": "next.config.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "keywords": [
+    "comparatore",
+    "viaggi",
+    "finanza",
+    "vrabo"
+  ],
+  "author": "VRABO Team",
+  "license": "MIT",
+  "description": "VRABO – Il comparatore dei comparatori: viaggi, finanza, trading, servizi in un'unica piattaforma"
 }

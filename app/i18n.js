@@ -60,9 +60,16 @@ i18next.use(initReactI18next).init({
       },
     },
   },
-  lng: "it",
+
+  // Detect lingua browser lato client, fallback "it"
+  lng:
+    typeof window !== "undefined"
+      ? (navigator.language || "it").split("-")[0]
+      : "it",
   fallbackLng: "en",
+
   interpolation: { escapeValue: false },
+  debug: process.env.NODE_ENV === "development",
 });
 
 export default i18next;

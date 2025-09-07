@@ -1,10 +1,8 @@
 // postcss.config.js
 module.exports = {
   plugins: {
-    // 🔹 Core
+    /* --- Core --- */
     tailwindcss: {},
-
-    // 🔹 Autoprefixer avanzato
     autoprefixer: {
       grid: "autoplace",
       flexbox: "no-2009",
@@ -16,14 +14,12 @@ module.exports = {
       ],
     },
 
-    // 🔹 Nesting moderno (stile SCSS)
-    "postcss-nesting": {},
-
-    // 🔹 Feature CSS future
+    /* --- Modern CSS --- */
+    "postcss-nesting": {}, // nesting moderno (SCSS-like)
     "postcss-preset-env": {
       stage: 0,
       features: {
-        "nesting-rules": true,
+        "nesting-rules": false, // ⚠️ disattivato qui per non confliggere con postcss-nesting
         "custom-properties": true,
         "logical-properties-and-values": true,
         "media-query-ranges": true,
@@ -32,32 +28,26 @@ module.exports = {
       },
     },
 
-    // 🔹 Tipografia fluida
+    /* --- Extra power --- */
     "postcss-fluid": {
       fontSize: true,
       spacing: true,
       lineHeight: true,
     },
-
-    // 🔹 Dark/Light mode
     "postcss-dark-theme-class": {
       darkSelector: ".dark",
       lightSelector: ".light",
     },
-
-    // 🔹 Custom properties senza importFrom
     "postcss-custom-properties": { preserve: true },
-
-    // 🔹 Utility extra
     "postcss-inline-svg": { removeFill: true },
     "postcss-image-set-function": {},
     "postcss-rtlcss": {},
 
-    // 🔹 FIX e compatibilità cross-browser
-    "postcss-flexbugs-fixes": {},  // 🔥 corregge bug Flexbox
-    "postcss-normalize": {},       // 🔥 reset CSS moderno
+    /* --- Fix cross-browser --- */
+    "postcss-flexbugs-fixes": {},
+    "postcss-normalize": {},
 
-    // 🔹 Ottimizzazione in produzione
+    /* --- Ottimizzazione in produzione --- */
     ...(process.env.NODE_ENV === "production"
       ? {
           cssnano: {
@@ -69,7 +59,7 @@ module.exports = {
                 mergeLonghand: true,
                 colormin: true,
                 reduceIdents: true,
-                zindex: false,
+                zindex: false, // evita di rompere layering tailwind
               },
             ],
           },
