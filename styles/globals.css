@@ -44,7 +44,7 @@
 }
 .modal-sheet {
   @apply fixed bottom-0 left-0 right-0 z-modal bg-white dark:bg-gray-900
-         rounded-t-2xl shadow-xl-lg p-6;
+         rounded-t-2xl shadow-2xl p-6;
 }
 
 /* ---------- Prose (contenuti lunghi) ---------- */
