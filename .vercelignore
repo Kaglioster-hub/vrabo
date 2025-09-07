@@ -1,0 +1,21 @@
+# Evita upload di dipendenze/caches e archivi
+node_modules
+.next
+out
+dist
+coverage
+tmp
+.cache
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.log
+**/*.map
+# Media grezzi (teniamo solo il compresso)
+public/bg_old.mp4
+public/bg_raw.mp4
+public/*.mov
+public/*.mkv
+public/*.avi
