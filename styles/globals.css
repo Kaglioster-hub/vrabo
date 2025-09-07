@@ -1,4 +1,4 @@
-﻿/* ===========================================================
+/* ===========================================================
    VRABO – Tailwind Globals (GODMODE) — Addendum
    - KBD / Selection / SR-only focusable
    - Recharts polish + chart-card
@@ -32,7 +32,7 @@
 /* ---------- Toast ---------- */
 .toast {
   @apply fixed z-toast bottom-4 left-1/2 -translate-x-1/2
-         bg-gray-900 text-white px-4 py-2 rounded-xl shadow-elev
+         bg-gray-900 text-white px-4 py-2 rounded-xl shadow-xl
          flex items-center gap-3;
 }
 .toast-success { @apply bg-emerald-600; }
@@ -44,7 +44,7 @@
 }
 .modal-sheet {
   @apply fixed bottom-0 left-0 right-0 z-modal bg-white dark:bg-gray-900
-         rounded-t-2xl shadow-elev-lg p-6;
+         rounded-t-2xl shadow-xl-lg p-6;
 }
 
 /* ---------- Prose (contenuti lunghi) ---------- */
@@ -107,7 +107,7 @@
 .btn-success { @apply btn bg-emerald-600 text-white; }
 .btn-danger  { @apply btn bg-rose-600 text-white; }
 .btn-gradient {
-  @apply btn text-white shadow-elev;
+  @apply btn text-white shadow-xl;
   background: var(--grad-primary);
 }
 
