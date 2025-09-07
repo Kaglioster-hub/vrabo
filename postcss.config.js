@@ -4,13 +4,12 @@ module.exports = {
     /* --- Core --- */
     tailwindcss: {},
     autoprefixer: {
-      grid: "autoplace",
+      grid: false, // ✅ disattivato autoplace legacy (addio warning)
       flexbox: "no-2009",
       overrideBrowserslist: [
         ">0.2%",
         "not dead",
         "not op_mini all",
-        "ie >= 11",
       ],
     },
 
@@ -19,12 +18,13 @@ module.exports = {
     "postcss-preset-env": {
       stage: 0,
       features: {
-        "nesting-rules": false, // ⚠️ disattivato qui per non confliggere con postcss-nesting
+        "nesting-rules": false, // ⚠️ già gestito da postcss-nesting
         "custom-properties": true,
         "logical-properties-and-values": true,
         "media-query-ranges": true,
         "color-functional-notation": true,
         "lab-function": true,
+        "is-pseudo-class": false, // ✅ evita trasformazioni su :is()
       },
     },
 

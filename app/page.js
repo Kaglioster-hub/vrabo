@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -15,6 +15,7 @@ import "@/app/i18n";
 import { useTranslation } from "react-i18next";
 
 // Componenti
+import Navbar from "@/components/Navbar";
 import SearchBarUltraPro from "@/components/SearchBarUltraPro";
 import Donations from "@/components/Donations";
 import CookieBanner from "@/components/CookieBanner";
@@ -23,6 +24,19 @@ import SkeletonCard from "@/components/SkeletonCard";
 // Utils & Hooks
 import { toISO } from "@/utils/helpers";
 import useAffiliate from "@/hooks/useAffiliate";
+
+// Tipi minimi per i risultati
+type ResultItem = {
+  url?: string;
+  image?: string;
+  title?: string;
+  tag?: string;
+  location?: string;
+  price?: string;
+  rating?: number;
+  type?: string;
+  _priceVal?: number;
+};
 
 // -------------------------------------------------------------
 // Costanti UI
@@ -35,7 +49,7 @@ const TABS = [
   { id: "trading", labelKey: "tabs.trading" },
   { id: "tickets", labelKey: "tabs.tickets" },
   { id: "connectivity", labelKey: "tabs.connectivity" },
-];
+] as const;
 
 const POPULAR_CITIES = ["Roma", "Milano", "Firenze", "Napoli", "Parigi", "Londra", "Tokyo"];
 const COLORS = ["#2563eb", "#9333ea", "#f59e0b", "#10b981", "#ef4444", "#3b82f6"];
@@ -45,15 +59,15 @@ const COLORS = ["#2563eb", "#9333ea", "#f59e0b", "#10b981", "#ef4444", "#3b82f6"
 // -------------------------------------------------------------
 export default function Home() {
   const { t } = useTranslation();
-  const [active, setActive] = useState("bnb");
+  const [active, setActive] = useState<(typeof TABS)[number]["id"]>("bnb");
 
   // Stato risultati
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<ResultItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Recenti persistenti
-  const [recents, setRecents] = useState([]);
+  const [recents, setRecents] = useState<any[]>([]);
   useEffect(() => {
     try {
       const r = localStorage.getItem("vrabo_recent");
@@ -63,7 +77,7 @@ export default function Home() {
     }
   }, []);
 
-  const saveRecent = (item) => {
+  const saveRecent = (item: any) => {
     const next = [item, ...recents].filter(Boolean).slice(0, 12);
     setRecents(next);
     localStorage.setItem("vrabo_recent", JSON.stringify(next));
@@ -73,7 +87,7 @@ export default function Home() {
   const affiliateLinks = useAffiliate(active);
 
   // Search API
-  const doSearch = async (payload = {}) => {
+  const doSearch = async (payload: any = {}) => {
     setLoading(true);
     setError("");
     setResults([]);
@@ -101,7 +115,7 @@ export default function Home() {
   };
 
   // Lazy loading observer per risultati
-  const resultsRef = useRef(null);
+  const resultsRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     if (!resultsRef.current) return;
@@ -115,6 +129,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black text-gray-900 dark:text-white flex flex-col">
+      <Navbar />
+
       {/* Analytics */}
       <Script defer data-domain="vrabo.it" src="https://plausible.io/js/script.js" />
       <Script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX" />
@@ -134,14 +150,15 @@ export default function Home() {
           playsInline
           src="/bg.mp4"
         />
-        <div className="absolute inset-0 bg-black/70" />
+        {/* aggiungo la classe 'hero-overlay' per coerenza con le print-styles */}
+        <div className="hero-overlay absolute inset-0 bg-black/70" />
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           className="relative z-10 max-w-6xl px-6 w-full"
         >
-          {/* LOGO: quadratino verde su nero, centrato */}
+          {/* LOGO */}
           <picture>
             <source srcSet="/logo.svg" type="image/svg+xml" />
             <img
@@ -220,6 +237,9 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* MAIN content anchor per skip-link */}
+      <main id="content" />
+
       {/* Results */}
       <section ref={resultsRef} className="max-w-7xl mx-auto py-10 px-6 flex-1 w-full">
         {loading && (
@@ -244,43 +264,46 @@ export default function Home() {
             animate={{ opacity: 1 }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
           >
-            {results.map((r, i) => (
-              <motion.a
-                key={`${r.url ?? "item"}-${i}`}
-                href={`/api/track?url=${encodeURIComponent(r.url)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.03, rotate: 0.2 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 200 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl flex flex-col group transition relative"
-              >
-                <div className="relative w-full h-48 overflow-hidden">
-                  <img
-                    src={r.image || "/logo.png"}
-                    alt={r.title || "Offerta"}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <span className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md shadow">
-                    {r.tag || "Offerta"}
-                  </span>
-                </div>
-
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="font-bold text-lg mb-1 truncate">{r.title}</h3>
-                  <p className="text-sm text-gray-500 flex-1 truncate">
-                    {r.location || "—"}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="text-xl text-blue-600 font-semibold">{r.price || "—"}</p>
-                    <span className="text-yellow-500 text-sm">
-                      ⭐ {r.rating || (3.5 + (i % 3) * 0.5).toFixed(1)}
+            {results.map((r, i) => {
+              const key = `${r.url ?? r.title ?? "item"}-${i}`;
+              return (
+                <motion.a
+                  key={key}
+                  href={`/api/track?url=${encodeURIComponent(r.url || "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.03, rotate: 0.2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl flex flex-col group transition relative"
+                >
+                  <div className="relative w-full h-48 overflow-hidden">
+                    <img
+                      src={r.image || "/logo.png"}
+                      alt={r.title || "Offerta"}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <span className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 text-xs rounded-md shadow">
+                      {r.tag || "Offerta"}
                     </span>
                   </div>
-                </div>
-              </motion.a>
-            ))}
+
+                  <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-lg mb-1 truncate">{r.title || "—"}</h3>
+                    <p className="text-sm text-gray-500 flex-1 truncate">
+                      {r.location || "—"}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-xl text-blue-600 font-semibold">{r.price || "—"}</p>
+                      <span className="text-yellow-500 text-sm">
+                        ⭐ {(r.rating ?? (3.5 + (i % 3) * 0.5)).toFixed ? (r.rating as number).toFixed(1) : (3.5 + (i % 3) * 0.5).toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                </motion.a>
+              );
+            })}
           </motion.div>
         )}
 
@@ -288,12 +311,12 @@ export default function Home() {
         {!!results.length && visible && (
           <div className="mt-16 grid md:grid-cols-2 gap-8">
             {/* BarChart */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div className="chart-card">
               <h3 className="text-xl font-bold mb-6 text-center">📊 {t("priceDistribution") || "Distribuzione prezzi"}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={results.map((r) => ({
-                    name: (r.title || "").slice(0, 14) + "...",
+                    name: (r.title || "").slice(0, 14) + (r.title && r.title.length > 14 ? "…" : ""),
                     prezzo: r._priceVal || Math.floor(Math.random() * 200) + 50,
                   }))}
                 >
@@ -308,7 +331,7 @@ export default function Home() {
             </div>
 
             {/* PieChart */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div className="chart-card">
               <h3 className="text-xl font-bold mb-6 text-center">
                 🍩 {t("categoryDistribution") || "Distribuzione per categoria"}
               </h3>
@@ -318,7 +341,7 @@ export default function Home() {
                     data={TABS.map((tab) => ({
                       name: t(tab.labelKey),
                       value:
-                        (results.filter((r) => r.type === tab.id).length) ||
+                        results.filter((r) => r.type === tab.id).length ||
                         Math.floor(Math.random() * 5) + 1,
                     }))}
                     cx="50%"
@@ -409,7 +432,7 @@ export default function Home() {
       <section id="newsletter" className="py-20 bg-gradient-to-r from-blue-600 to-purple-700 text-white text-center px-6">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold mb-4">📬 Rimani aggiornato</h2>
-        <p className="mb-6">Iscriviti alla nostra newsletter: niente spam, solo le migliori offerte e aggiornamenti.</p>
+          <p className="mb-6">Iscriviti alla nostra newsletter: niente spam, solo le migliori offerte e aggiornamenti.</p>
           <form
             onSubmit={(e) => { e.preventDefault(); alert("✨ Iscrizione avvenuta con successo!"); }}
             className="flex flex-col sm:flex-row gap-3 justify-center"
