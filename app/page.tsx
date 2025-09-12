@@ -152,7 +152,7 @@ export default function Home() {
         />
         {/* aggiungo la classe 'hero-overlay' per coerenza con le print-styles */}
         <div className="hero-overlay absolute inset-0 bg-black/70" />
-        <motion.div
+        <motion.div<HTMLDivElement>
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
@@ -234,7 +234,7 @@ export default function Home() {
               </div>
             )}
           </div>
-        </motion.div>
+        </motion.div<HTMLDivElement>>
       </section>
 
       {/* MAIN content anchor per skip-link */}
@@ -259,7 +259,7 @@ export default function Home() {
         )}
 
         {!!results.length && visible && (
-          <motion.div
+          <motion.div<HTMLDivElement>
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -304,7 +304,7 @@ export default function Home() {
                 </motion.a>
               );
             })}
-          </motion.div>
+          </motion.div<HTMLDivElement>>
         )}
 
         {/* Charts */}
@@ -412,7 +412,7 @@ export default function Home() {
               { name: "Giulia P.", text: "Ho prenotato un weekend a Firenze con due click. La ricerca voli + hotel insieme è geniale." },
               { name: "Marco D.", text: "Uso VRABO anche per comparare servizi finanziari. Bello avere tutto centralizzato, chiaro e in dark mode!" },
             ].map((t, i) => (
-              <motion.div
+              <motion.div<HTMLDivElement>
                 key={i}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -422,7 +422,7 @@ export default function Home() {
               >
                 <p className="text-gray-600 dark:text-gray-300 italic mb-4">“{t.text}”</p>
                 <h4 className="font-semibold">– {t.name}</h4>
-              </motion.div>
+              </motion.div<HTMLDivElement>>
             ))}
           </div>
         </div>
