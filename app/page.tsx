@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";`n`nconst MotionDiv = motion.div as React.FC<React.HTMLAttributes<HTMLDivElement>>;`nconst MotionA = motion.a as React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>>;
+import { motion } from "framer-motion";`nimport Script from "next/script";`n`n// Alias tipizzati per Framer Motion`nconst MotionDiv = MotionDiv as React.FC<React.HTMLAttributes<HTMLDivElement>>;`nconst MotionA = MotionA as React.FC<React.AnchorHTMLAttributes<HTMLAnchorElement>>;
 import Script from "next/script";
 
 // Recharts
@@ -473,3 +473,4 @@ export default function Home() {
     </div>
   );
 }
+
