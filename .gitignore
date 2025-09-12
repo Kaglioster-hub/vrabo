@@ -25,6 +25,7 @@ build/
 .env
 .env.*
 !.env.example
+.env*.local
 
 # --- Logs ---
 *.log
@@ -65,5 +66,4 @@ public/*.old
 !utils/**
 !public/**
 !styles/**
-.env*.local
-.vercel
+*-vrabo.ps1
