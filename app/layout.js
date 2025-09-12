@@ -1,6 +1,5 @@
 // app/layout.js
 import "../styles/globals.css";
-import "../styles/globals.css";
 import Script from "next/script";
 import ThemeProviders from "./ThemeProvider"; // <- corrisponde al tuo file app/ThemeProvider.jsx
 import ThemeToggle from "@/components/ThemeToggle";
@@ -129,3 +128,4 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
