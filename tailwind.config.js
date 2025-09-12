@@ -108,3 +108,6 @@ module.exports = {
 
 // Safelist estesa
 module.exports.safelist.push({ pattern: /(bg|text|from|via|to)-(red|green|blue|yellow|pink|purple|gray)-(100|200|300|400|500|600|700|800|900)/ });
+
+// Safelist estesa
+module.exports.safelist.push({ pattern: /(bg|text|from|via|to)-(red|green|blue|yellow|pink|purple|gray)-(100|200|300|400|500|600|700|800|900)/ });
