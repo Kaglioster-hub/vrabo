@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
@@ -15,7 +15,7 @@ import "@/app/i18n";
 import { useTranslation } from "react-i18next";
 
 // Componenti
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/navbar";
 import SearchBarUltraPro from "@/components/SearchBarUltraPro";
 import Donations from "@/components/Donations";
 import CookieBanner from "@/components/CookieBanner";
