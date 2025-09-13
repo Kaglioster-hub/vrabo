@@ -67,3 +67,4 @@ public/*.old
 !public/**
 !styles/**
 *-vrabo.ps1
+.vercel

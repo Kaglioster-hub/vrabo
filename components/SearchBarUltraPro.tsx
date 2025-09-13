@@ -3,6 +3,31 @@ import { useEffect, useMemo, useRef, useState, useId } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+export type Item = { key: string; name: string };
+
+export interface SearchBarUltraProProps {
+  mode?: "general" | "flight" | "hotel" | "bnb" | "car";
+  value?: string;
+  onChange?: (val: string) => void;
+  onSubmit?: (payload: any) => void;
+  onPick?: (item: Item) => void;
+  recent?: Item[];
+  popular?: Item[];
+  pinned?: Item[];
+  placeholder?: string;
+  className?: string;
+  suggestUrl?: string;
+  debounceMs?: number;
+  minChars?: number;
+  maxResults?: number;
+  preloadOnFocus?: boolean;
+  enableVoice?: boolean;
+  hotkeys?: boolean;
+  storageKey?: string;
+  historyMax?: number;
+  onError?: (err: any) => void;
+}
+
 /**
  * SearchBarUltraPro — MEGA UNIFICATA EDITION ⚡ (improved)
  * - Modalità: general, flight, hotel/bnb, car
@@ -830,3 +855,4 @@ function prevSelectable(flat, h) {
   }
   return -1;
 }
+
