@@ -1,9 +1,33 @@
 "use client";
+
+/**
+ * ================================================================
+ * SearchBarUltraPro.tsx – MEGA UNIFICATA EDITION ⚡
+ * ================================================================
+ * - Modalità: general, flight, hotel/bnb, car
+ * - Suggest con cache LRU, debounce, abort, single-flight dedupe
+ * - ARIA combobox + aria-live + aria-busy
+ * - Ghost hint + Tab completion + Enter/ESC
+ * - Hotkeys (/ e Cmd/Ctrl+K), Voice input (if available), Swap voli
+ * - Recent/Popular/Pinned con localStorage (dedupe)
+ * - Date UX: vincoli check-in/out e partenza/ritorno
+ * - Output coerente: onSubmit riceve sempre un payload oggetto
+ * - Affiliate redirect automatico (Aviasales, Booking, Localrent)
+ * ================================================================
+ */
+
 import { useEffect, useMemo, useRef, useState, useId } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-export type Item = { key: string; name: string };
+/* ---------- Tipi ---------- */
+export type Item = {
+  key: string;
+  name: string;
+  type?: string;
+  country?: string;
+  code?: string;
+};
 
 export interface SearchBarUltraProProps {
   mode?: "general" | "flight" | "hotel" | "bnb" | "car";
@@ -28,18 +52,18 @@ export interface SearchBarUltraProProps {
   onError?: (err: any) => void;
 }
 
-/**
- * SearchBarUltraPro — MEGA UNIFICATA EDITION ⚡ (improved)
- * - Modalità: general, flight, hotel/bnb, car
- * - Suggest con cache LRU, debounce, abort, single-flight dedupe
- * - ARIA combobox + aria-live + aria-busy
- * - Ghost hint + Tab completion + Enter/ESC
- * - Hotkeys (/ e Cmd/Ctrl+K), Voice input (if available), Swap voli
- * - Recent/Popular/Pinned con localStorage (dedupe)
- * - Date UX: vincoli check-in/out e partenza/ritorno
- * - Output coerente: onSubmit riceve sempre un payload oggetto
- */
+/* --- Popular cities fallback --- */
+const POPULAR_CITIES: Item[] = [
+  { key: "roma", name: "Roma", type: "city", country: "Italia" },
+  { key: "milano", name: "Milano", type: "city", country: "Italia" },
+  { key: "firenze", name: "Firenze", type: "city", country: "Italia" },
+  { key: "napoli", name: "Napoli", type: "city", country: "Italia" },
+  { key: "parigi", name: "Parigi", type: "city", country: "Francia" },
+  { key: "londra", name: "Londra", type: "city", country: "UK" },
+  { key: "tokyo", name: "Tokyo", type: "city", country: "Giappone" },
+];
 
+/* ---------- Componente ---------- */
 export default function SearchBarUltraPro({
   mode = "general",
   value,
@@ -47,13 +71,13 @@ export default function SearchBarUltraPro({
   onSubmit,
   onPick,
   recent = [],
-  popular = [],
+  popular = POPULAR_CITIES,
   pinned = [],
   placeholder = "Cerca destinazione o servizio…",
   className = "",
   suggestUrl = "/api/suggest",
   debounceMs = 250,
-  minChars = 2,
+  minChars = 1, // ⚡ già da 1 carattere parte
   maxResults = 50,
   preloadOnFocus = true,
   enableVoice = true,
@@ -61,19 +85,20 @@ export default function SearchBarUltraPro({
   storageKey = "vrabo.search.recent",
   historyMax = 12,
   onError,
-}) {
-  /* ---------- styling centralizzato ---------- */
+}: SearchBarUltraProProps) {
+  /* ---------- Styling ---------- */
   const inputStyle =
-    "w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
+    "w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 " +
+    "bg-white dark:bg-gray-800 text-black dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
 
-  /* ---------- STATE ---------- */
+  /* ---------- Stato ---------- */
   const [inner, setInner] = useState("");
   const val = (value ?? inner).toString();
-  const setVal = (v) => (onChange ? onChange(v) : setInner(v));
+  const setVal = (v: string) => (onChange ? onChange(v) : setInner(v));
 
   const [open, setOpen] = useState(false);
-  const [sections, setSections] = useState([]);
-  const [flat, setFlat] = useState([]);
+  const [sections, setSections] = useState<any[]>([]);
+  const [flat, setFlat] = useState<any[]>([]);
   const [hi, setHi] = useState(-1);
   const [loading, setLoading] = useState(false);
   const [hint, setHint] = useState("");
@@ -84,15 +109,15 @@ export default function SearchBarUltraPro({
   const [to, setTo] = useState("");
   const [dest, setDest] = useState("");
   const [pickup, setPickup] = useState("");
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
-  /* ---------- REFS ---------- */
-  const abortRef = useRef(null);
-  const debRef = useRef(null);
-  const boxRef = useRef(null);
-  const inputRef = useRef(null);
-  const listRef = useRef(null);
+  /* ---------- Refs ---------- */
+  const abortRef = useRef<AbortController | null>(null);
+  const debRef = useRef<NodeJS.Timeout | null>(null);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
   const cacheRef = useRef(new LRUCache(200, 300000)); // 5 min TTL
   const inflightRef = useRef(new Map());
   const seqRef = useRef(0);
@@ -102,21 +127,20 @@ export default function SearchBarUltraPro({
   const listboxId = `sb-ultra-listbox-${uid}`;
   const activeId = hi >= 0 ? `${listboxId}-row-${hi}` : undefined;
 
-  /* ---------- PLACEHOLDER dinamico ---------- */
+  /* ---------- Placeholder dinamico ---------- */
   const ph = useMemo(() => {
     if (mode === "flight") return "Da/Per (es. Roma FCO → JFK)";
     if (mode === "car") return "Punto ritiro auto";
     if (mode === "bnb" || mode === "hotel") return "Città/Hotel (es. Firenze – Duomo)";
     return placeholder;
   }, [mode, placeholder]);
-
   /* ---------- Hotkeys globali ---------- */
   useEffect(() => {
     if (!hotkeys) return;
-    const onKey = (e) => {
-      const tag = (e.target?.tagName || "").toLowerCase();
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       const typing =
-        tag === "input" || tag === "textarea" || e.target?.isContentEditable;
+        tag === "input" || tag === "textarea" || (e.target as HTMLElement)?.isContentEditable;
       if (!typing && (e.key === "/" || (e.key.toLowerCase() === "k" && (e.ctrlKey || e.metaKey)))) {
         e.preventDefault();
         inputRef.current?.focus();
@@ -129,15 +153,15 @@ export default function SearchBarUltraPro({
 
   /* ---------- Cleanup ---------- */
   useEffect(() => () => {
-    clearTimeout(debRef.current);
+    if (debRef.current) clearTimeout(debRef.current);
     abortRef.current?.abort();
   }, []);
 
-  /* ---------- Click esterno chiude ---------- */
+  /* ---------- Click esterno ---------- */
   useEffect(() => {
-    function onDoc(e) {
+    function onDoc(e: MouseEvent) {
       if (!boxRef.current) return;
-      if (!boxRef.current.contains(e.target)) setOpen(false);
+      if (!boxRef.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
@@ -162,11 +186,10 @@ export default function SearchBarUltraPro({
     setOpen(secs.some((s) => s.items.length > 0));
   };
 
-  /* ---------- Suggest (mode=general) ---------- */
+  /* ---------- Suggest engine ---------- */
   useEffect(() => {
     if (mode !== "general") return;
 
-    // campo vuoto: mostra statici (recent/pinned/popular) se focus
     if (!val.trim()) {
       setErrMsg("");
       setHint("");
@@ -174,12 +197,13 @@ export default function SearchBarUltraPro({
       if (preloadOnFocus && document.activeElement === inputRef.current) {
         openStaticIfAny();
       } else {
-        setSections([]); setFlat([]); setOpen(false);
+        setSections([]);
+        setFlat([]);
+        setOpen(false);
       }
       return;
     }
 
-    // pochi caratteri: fuzzy sui statici
     if (val.trim().length < minChars) {
       const secs = fuzzyFilterSections(buildStaticSections(), val);
       const f = flattenSections(secs);
@@ -191,7 +215,7 @@ export default function SearchBarUltraPro({
       return;
     }
 
-    clearTimeout(debRef.current);
+    if (debRef.current) clearTimeout(debRef.current);
     debRef.current = setTimeout(async () => {
       const q = val.trim();
       const key = `${suggestUrl}|${mode}|${q}|${maxResults}`;
@@ -208,6 +232,7 @@ export default function SearchBarUltraPro({
         } catch {}
         return;
       }
+
       abortRef.current?.abort();
       abortRef.current = new AbortController();
       setLoading(true);
@@ -215,7 +240,7 @@ export default function SearchBarUltraPro({
 
       const p = (async () => {
         const url = `${suggestUrl}?q=${encodeURIComponent(q)}&mode=${mode}&limit=${maxResults}`;
-        const r = await fetch(url, { signal: abortRef.current.signal });
+        const r = await fetch(url, { signal: abortRef.current?.signal });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const j = await r.json();
         return Array.isArray(j?.suggestions) ? j.suggestions : [];
@@ -226,12 +251,14 @@ export default function SearchBarUltraPro({
         const suggestions = await p;
         cacheRef.current.set(key, suggestions);
         if (seqRef.current === seq) applySuggestions(q, suggestions, seq);
-      } catch (err) {
+      } catch (err: any) {
         if (err?.name !== "AbortError") {
           const secs = fuzzyFilterSections(buildStaticSections(), q);
           const f = flattenSections(secs);
-          setSections(secs); setFlat(f);
-          setHint(bestHintFromSections(secs, q)); setHi(firstRowIndex(f));
+          setSections(secs);
+          setFlat(f);
+          setHint(bestHintFromSections(secs, q));
+          setHi(firstRowIndex(f));
           setOpen(secs.some((s) => s.items.length));
           setErrMsg("⚠️ Connessione lenta, fallback locale.");
           onError?.(err);
@@ -242,10 +269,12 @@ export default function SearchBarUltraPro({
       }
     }, debounceMs);
 
-    return () => clearTimeout(debRef.current);
+    return () => {
+      if (debRef.current) clearTimeout(debRef.current);
+    };
   }, [val, mode, minChars, maxResults, suggestUrl, debounceMs, preloadOnFocus]);
 
-  function applySuggestions(q, suggestions, seq) {
+  function applySuggestions(q: string, suggestions: any[], seq: number) {
     if (seq !== seqRef.current) return;
     const normalized = normalizeArray(suggestions).slice(0, maxResults);
     const secs = [
@@ -261,10 +290,9 @@ export default function SearchBarUltraPro({
     setOpen(secs.some((s) => s.items.length));
     setErrMsg("");
   }
-
   /* ---------- Submit ---------- */
   const doSubmit = () => {
-    let payload = {};
+    let payload: any = {};
     if (mode === "flight") {
       payload = { from, to, depart: startDate, return: endDate, type: "flight" };
     } else if (mode === "hotel" || mode === "bnb") {
@@ -279,7 +307,7 @@ export default function SearchBarUltraPro({
     setOpen(false);
   };
 
-  const pick = (item) => {
+  const pick = (item: Item) => {
     const name = item?.name ?? "";
     if (!name) return;
     setVal(name);
@@ -287,7 +315,7 @@ export default function SearchBarUltraPro({
     setHint("");
     saveHistory(storageKey, historyRef, name, historyMax);
     onPick?.(item);
-    onSubmit?.({ query: name, picked: item, type: "general" }); // coerente
+    onSubmit?.({ query: name, picked: item, type: "general" });
   };
 
   const swapFlight = () => {
@@ -296,26 +324,23 @@ export default function SearchBarUltraPro({
     setTo(from);
   };
 
-  // date vincoli: evita end < start
-  const onStartDate = (d) => {
+  const onStartDate = (d: Date | null) => {
     setStartDate(d);
     if (endDate && d && endDate < d) setEndDate(d);
   };
-  const onEndDate = (d) => {
+  const onEndDate = (d: Date | null) => {
     if (startDate && d && d < startDate) setEndDate(startDate);
     else setEndDate(d);
   };
 
   const onVoice = () => {
     if (!enableVoice) return;
-    const SR =
-      typeof window !== "undefined" &&
-      (window.SpeechRecognition || window.webkitSpeechRecognition);
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
     try {
       const rec = new SR();
       rec.lang = "it-IT";
-      rec.onresult = (ev) => {
+      rec.onresult = (ev: any) => {
         const t = ev?.results?.[0]?.[0]?.transcript || "";
         if (t) {
           if (mode === "general") setVal(t);
@@ -330,156 +355,130 @@ export default function SearchBarUltraPro({
 
   const showClear = mode === "general" ? !!val : !!dest;
 
-  /* ---------- RENDER ---------- */
+  /* ---------- Render ---------- */
   return (
     <div
       ref={boxRef}
       className={`relative w-full p-4 rounded-xl shadow-lg bg-white dark:bg-gray-900 ${className}`}
     >
-      {/* --- MODE: general --- */}
+      {/* General */}
       {mode === "general" && (
-        <>
-          <div className="relative">
-            {/* Ghost hint */}
-            <div className="absolute inset-y-0 left-4 right-28 flex items-center pointer-events-none z-0">
-              <span className="truncate text-gray-400 select-none">
-                <span className="invisible">{val}</span>
-                <span className="opacity-40">
-                  {validHint(val, hint) ? hint.slice(val.length) : ""}
-                </span>
+        <div className="relative">
+          {/* Ghost hint */}
+          <div className="absolute inset-y-0 left-4 right-28 flex items-center pointer-events-none z-0">
+            <span className="truncate text-gray-400 select-none">
+              <span className="invisible">{val}</span>
+              <span className="opacity-40">
+                {validHint(val, hint) ? hint.slice(val.length) : ""}
               </span>
-            </div>
+            </span>
+          </div>
 
-            {/* Input */}
-            <input
-              ref={inputRef}
-              value={val}
-              onChange={(e) => setVal(e.target.value)}
-              onFocus={() => {
-                if (!val.trim() && preloadOnFocus) openStaticIfAny();
-                else setOpen(flat.length > 0);
-              }}
-              onBlur={() => {
-                // chiudi solo se il focus esce dal box
-                requestAnimationFrame(() => {
-                  if (!boxRef.current?.contains(document.activeElement))
-                    setOpen(false);
-                });
-              }}
-              onKeyDown={(e) =>
-                handleKeyDown(
-                  e,
-                  flat,
-                  hi,
-                  setHi,
-                  pick,
-                  doSubmit,
-                  val,
-                  hint,
-                  setVal,
-                  setOpen
-                )
-              }
-              placeholder={ph}
-              autoComplete="off"
-              role="combobox"
-              aria-expanded={open}
-              aria-controls={listboxId}
-              aria-activedescendant={activeId}
-              aria-autocomplete="list"
-              aria-busy={loading}
-              className={`${inputStyle} pr-28 relative z-10`}
-            />
+          {/* Input */}
+          <input
+            ref={inputRef}
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            onFocus={() => {
+              if (!val.trim() && preloadOnFocus) openStaticIfAny();
+              else setOpen(flat.length > 0);
+            }}
+            onBlur={() => {
+              requestAnimationFrame(() => {
+                if (!boxRef.current?.contains(document.activeElement)) setOpen(false);
+              });
+            }}
+            onKeyDown={(e) =>
+              handleKeyDown(e, flat, hi, setHi, pick, doSubmit, val, hint, setVal, setOpen)
+            }
+            placeholder={ph}
+            autoComplete="off"
+            role="combobox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-activedescendant={activeId}
+            aria-autocomplete="list"
+            aria-busy={loading}
+            className={`${inputStyle} pr-28 relative z-10`}
+          />
 
-            {/* Controls */}
-            <div className="absolute inset-y-0 right-2 flex items-center gap-1 z-20">
-              {enableVoice && (
-                <IconBtn title="Dettatura vocale" onClick={onVoice}>
-                  🎤
-                </IconBtn>
-              )}
-              {showClear && (
-                <IconBtn
-                  title="Pulisci"
-                  onClick={() => {
-                    setVal("");
-                    setHint("");
-                    setOpen(false);
-                    setHi(-1);
-                    inputRef.current?.focus();
-                  }}
-                >
-                  ⨯
-                </IconBtn>
-              )}
-            </div>
-
-            {/* Dropdown */}
-            {open && (
-              <div
-                id={listboxId}
-                ref={listRef}
-                role="listbox"
-                aria-live="polite"
-                className="absolute z-50 mt-2 w-full max-h-96 overflow-auto bg-white dark:bg-gray-800 border rounded-xl shadow-xl"
+          {/* Controls */}
+          <div className="absolute inset-y-0 right-2 flex items-center gap-1 z-20">
+            {enableVoice && <IconBtn title="Dettatura vocale" onClick={onVoice}>🎤</IconBtn>}
+            {showClear && (
+              <IconBtn
+                title="Pulisci"
+                onClick={() => {
+                  setVal("");
+                  setHint("");
+                  setOpen(false);
+                  setHi(-1);
+                  inputRef.current?.focus();
+                }}
               >
-                {loading && <RowInfo text="⏳ Carico suggerimenti…" />}
-                {!loading && !flat.some((r) => r.__type === "item") && (
-                  <RowInfo text={errMsg || "Nessun risultato"} />
-                )}
-
-                {!loading &&
-                  flat.map((row, idx) => {
-                    if (row.__type === "header") {
-                      return (
-                        <div
-                          key={row.key}
-                          className="px-3 py-1 text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur z-10"
-                        >
-                          {row.title}
-                        </div>
-                      );
-                    }
-                    const active = idx === hi;
-                    const item = row.item;
-                    const subtitle = [item.country, item.code]
-                      .filter(Boolean)
-                      .join(" · ");
-                    const icon = iconFor(item.type || guessType(item, mode));
-                    return (
-                      <div
-                        id={`${listboxId}-row-${idx}`}
-                        key={`${item.key}-${idx}`}
-                        role="option"
-                        aria-selected={active}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onMouseEnter={() => setHi(idx)}
-                        onClick={() => pick(item)}
-                        className={`px-4 py-2 cursor-pointer flex items-center gap-2 ${
-                          active ? "bg-blue-50 dark:bg-gray-700" : ""
-                        }`}
-                      >
-                        <span className="shrink-0">{icon}</span>
-                        <div className="min-w-0">
-                          <div className="truncate">
-                            {highlightText(item.name, val)}
-                          </div>
-                          {subtitle && (
-                            <div className="text-xs text-gray-500 truncate">
-                              {subtitle}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
+                ⨯
+              </IconBtn>
             )}
           </div>
-        </>
+
+          {/* Dropdown */}
+          {open && (
+            <div
+              id={listboxId}
+              ref={listRef}
+              role="listbox"
+              aria-live="polite"
+              className="absolute z-50 mt-2 w-full max-h-96 overflow-auto bg-white dark:bg-gray-800 border rounded-xl shadow-xl"
+            >
+              {loading && <RowInfo text="⏳ Carico suggerimenti…" />}
+              {!loading && !flat.some((r) => r.__type === "item") && (
+                <RowInfo text={errMsg || "Nessun risultato"} />
+              )}
+              {!loading &&
+                flat.map((row, idx) => {
+                  if (row.__type === "header") {
+                    return (
+                      <div
+                        key={row.key}
+                        className="px-3 py-1 text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur z-10"
+                      >
+                        {row.title}
+                      </div>
+                    );
+                  }
+                  const active = idx === hi;
+                  const item = row.item as Item;
+                  const subtitle = [item.country, item.code].filter(Boolean).join(" · ");
+                  const icon = iconFor(item.type || guessType(item, mode));
+                  return (
+                    <div
+                      id={`${listboxId}-row-${idx}`}
+                      key={`${item.key}-${idx}`}
+                      role="option"
+                      aria-selected={active}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseEnter={() => setHi(idx)}
+                      onClick={() => pick(item)}
+                      className={`px-4 py-2 cursor-pointer flex items-center gap-2 ${
+                        active ? "bg-blue-50 dark:bg-gray-700" : ""
+                      }`}
+                    >
+                      <span className="shrink-0">{icon}</span>
+                      <div className="min-w-0">
+                        <div className="truncate">{highlightText(item.name, val)}</div>
+                        {subtitle && (
+                          <div className="text-xs text-gray-500 truncate">{subtitle}</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* --- MODE: flight --- */}
+      {/* Flight */}
       {mode === "flight" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 relative">
           <input
@@ -525,7 +524,7 @@ export default function SearchBarUltraPro({
         </div>
       )}
 
-      {/* --- MODE: hotel/bnb --- */}
+      {/* Hotel/BnB */}
       {(mode === "hotel" || mode === "bnb") && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <input
@@ -554,7 +553,7 @@ export default function SearchBarUltraPro({
         </div>
       )}
 
-      {/* --- MODE: car --- */}
+      {/* Car */}
       {mode === "car" && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <input
@@ -583,7 +582,7 @@ export default function SearchBarUltraPro({
         </div>
       )}
 
-      {/* --- Bottone cerca --- */}
+      {/* Bottone cerca */}
       <div className="mt-3 flex items-center justify-between">
         {mode === "general" && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -615,14 +614,12 @@ function IconBtn({ children, title, onClick, className = "" }) {
     </button>
   );
 }
-function RowInfo({ text }) {
-  return (
-    <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-      {text}
-    </div>
-  );
+
+function RowInfo({ text }: { text: string }) {
+  return <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{text}</div>;
 }
-function iconFor(type) {
+
+function iconFor(type?: string) {
   switch (type) {
     case "airport":
       return "🛫";
@@ -639,8 +636,8 @@ function iconFor(type) {
   }
 }
 
-/* --- Helpers --- */
-function normalizeArray(arr) {
+/* --- Utils --- */
+function normalizeArray(arr: any[]) {
   return (arr || [])
     .map((x) => {
       if (typeof x === "string") return { key: slug(x), name: x };
@@ -649,8 +646,9 @@ function normalizeArray(arr) {
     })
     .filter(Boolean);
 }
-function flattenSections(sections) {
-  const out = [];
+
+function flattenSections(sections: any[]) {
+  const out: any[] = [];
   for (const s of sections) {
     if (!s.items?.length) continue;
     out.push({ __type: "header", key: s.key, title: s.title });
@@ -658,54 +656,53 @@ function flattenSections(sections) {
   }
   return out;
 }
-function firstRowIndex(flat) {
+
+function firstRowIndex(flat: any[]) {
   if (!flat?.length) return -1;
   const idx = flat.findIndex((r) => r.__type === "item");
   return idx === -1 ? -1 : idx;
 }
-function validHint(val, hint) {
+
+function validHint(val: string, hint: string) {
   if (!val || !hint) return false;
-  return (
-    hint.toLowerCase().startsWith(val.toLowerCase()) &&
-    hint.toLowerCase() !== val.toLowerCase()
-  );
+  return hint.toLowerCase().startsWith(val.toLowerCase()) && hint.toLowerCase() !== val.toLowerCase();
 }
-function bestHint(items, q) {
+
+function bestHint(items: Item[], q: string) {
   if (!q) return "";
-  const x = items.find((i) =>
-    i.name?.toLowerCase().startsWith(q.toLowerCase())
-  );
+  const x = items.find((i) => i.name?.toLowerCase().startsWith(q.toLowerCase()));
   return x?.name || "";
 }
-function bestHintFromSections(sections, q) {
+
+function bestHintFromSections(sections: any[], q: string) {
   for (const s of sections) {
     const h = bestHint(s.items || [], q);
     if (h) return h;
   }
   return "";
 }
-function highlightText(text, q) {
+
+function highlightText(text: string, q: string) {
   if (!q) return text;
   const i = text.toLowerCase().indexOf(q.toLowerCase());
   if (i < 0) return text;
   return (
     <span>
       {text.slice(0, i)}
-      <mark className="bg-yellow-200 dark:bg-yellow-600">
-        {text.slice(i, i + q.length)}
-      </mark>
+      <mark className="bg-yellow-200 dark:bg-yellow-600">{text.slice(i, i + q.length)}</mark>
       {text.slice(i + q.length)}
     </span>
   );
 }
-function guessType(item, mode) {
-  if (item.code && item.code.length === 3 && item.code.toUpperCase() === item.code)
-    return "airport";
+
+function guessType(item: Item, mode: string) {
+  if (item.code && item.code.length === 3 && item.code.toUpperCase() === item.code) return "airport";
   if (mode === "car") return "car";
   if (mode === "hotel" || mode === "bnb") return "hotel";
   return "city";
 }
-function slug(s) {
+
+function slug(s: string) {
   return (s || "")
     .toString()
     .toLowerCase()
@@ -719,7 +716,7 @@ function LRUCache(limit = 100, ttl = 300000) {
   this.limit = limit;
   this.ttl = ttl;
 }
-LRUCache.prototype.get = function (k) {
+LRUCache.prototype.get = function (k: string) {
   const v = this.map.get(k);
   if (!v) return undefined;
   if (v.exp < Date.now()) {
@@ -730,10 +727,10 @@ LRUCache.prototype.get = function (k) {
   this.map.set(k, v);
   return v.val;
 };
-LRUCache.prototype.has = function (k) {
+LRUCache.prototype.has = function (k: string) {
   return this.get(k) !== undefined;
 };
-LRUCache.prototype.set = function (k, val) {
+LRUCache.prototype.set = function (k: string, val: any) {
   const exp = Date.now() + this.ttl;
   if (this.map.has(k)) this.map.delete(k);
   this.map.set(k, { val, exp });
@@ -743,7 +740,7 @@ LRUCache.prototype.set = function (k, val) {
 };
 
 /* ======= History ======= */
-function loadHistory(storageKey, seed = []) {
+function loadHistory(storageKey: string, seed = []) {
   if (typeof window === "undefined") return normalizeArray(seed);
   try {
     const raw = localStorage.getItem(storageKey);
@@ -753,10 +750,11 @@ function loadHistory(storageKey, seed = []) {
     return normalizeArray(seed);
   }
 }
-function saveHistory(storageKey, historyRef, name, max = 12) {
+
+function saveHistory(storageKey: string, historyRef: any, name: string, max = 12) {
   const item = typeof name === "string" ? { name } : name;
   const current = normalizeArray(historyRef.current);
-  const dedup = [item, ...current].reduce((acc, it) => {
+  const dedup = [item, ...current].reduce((acc: any[], it: any) => {
     if (acc.find((x) => x.name.toLowerCase() === it.name.toLowerCase())) return acc;
     acc.push(it);
     return acc;
@@ -769,10 +767,10 @@ function saveHistory(storageKey, historyRef, name, max = 12) {
 }
 
 /* ======= Fuzzy filter ======= */
-function fuzzyFilterSections(sections, q) {
+function fuzzyFilterSections(sections: any[], q: string) {
   if (!q) return sections;
   const QQ = q.toLowerCase();
-  const score = (name) => {
+  const score = (name: string) => {
     const s = (name || "").toLowerCase();
     let i = 0, j = 0, hits = 0;
     while (i < QQ.length && j < s.length) {
@@ -785,7 +783,7 @@ function fuzzyFilterSections(sections, q) {
   return sections
     .map((sec) => {
       const items = (sec.items || [])
-        .map((it) => ({ it, sc: score(it.name || "") }))
+        .map((it: Item) => ({ it, sc: score(it.name || "") }))
         .filter((x) => x.sc > 0)
         .sort((a, b) => b.sc - a.sc)
         .map((x) => x.it)
@@ -797,16 +795,16 @@ function fuzzyFilterSections(sections, q) {
 
 /* ======= Key handling ======= */
 function handleKeyDown(
-  e,
-  flat,
-  hi,
-  setHi,
-  pick,
-  doSubmit,
-  val,
-  hint,
-  setVal,
-  setOpen
+  e: React.KeyboardEvent,
+  flat: any[],
+  hi: number,
+  setHi: (i: number) => void,
+  pick: (item: Item) => void,
+  doSubmit: () => void,
+  val: string,
+  hint: string,
+  setVal: (v: string) => void,
+  setOpen: (v: boolean) => void
 ) {
   if (!flat?.length && e.key === "Enter") {
     e.preventDefault();
@@ -837,7 +835,8 @@ function handleKeyDown(
     }
   }
 }
-function nextSelectable(flat, h) {
+
+function nextSelectable(flat: any[], h: number) {
   if (!flat?.length) return -1;
   let i = h;
   for (let step = 0; step < flat.length; step++) {
@@ -846,7 +845,8 @@ function nextSelectable(flat, h) {
   }
   return -1;
 }
-function prevSelectable(flat, h) {
+
+function prevSelectable(flat: any[], h: number) {
   if (!flat?.length) return -1;
   let i = h;
   for (let step = 0; step < flat.length; step++) {
@@ -855,4 +855,102 @@ function prevSelectable(flat, h) {
   }
   return -1;
 }
+/* ======= Extra Potenziamenti ======= */
 
+/**
+ * 🔍 Debug log controllato
+ * Abilitalo con localStorage.setItem("vrabo.debug", "1")
+ */
+function debugLog(...args: any[]) {
+  if (typeof window !== "undefined" && localStorage.getItem("vrabo.debug") === "1") {
+    console.debug("[VRABO SearchBar]", ...args);
+  }
+}
+
+/**
+ * 📈 Tracking eventi per analytics / affiliate
+ * Usa un pixel invisibile o un event push su GTM
+ */
+function trackEvent(event: string, payload: Record<string, any> = {}) {
+  debugLog("trackEvent", event, payload);
+
+  // esempio: push su dataLayer
+  if (typeof window !== "undefined" && (window as any).dataLayer) {
+    (window as any).dataLayer.push({
+      event,
+      ...payload,
+    });
+  }
+
+  // esempio: pixel invisibile
+  const img = new Image();
+  img.src =
+    `/api/track?e=${encodeURIComponent(event)}&d=${encodeURIComponent(
+      JSON.stringify(payload)
+    )}&ts=${Date.now()}`;
+}
+
+/**
+ * 🎯 Costruzione link affiliate (Travelpayouts / Booking / etc.)
+ * Sostituisce query dirette con URL contenenti ID di affiliazione.
+ */
+function buildAffiliateUrl(item: Item, type: string) {
+  const base = "https://tp.media/r?marker=YOUR_MARKER&locale=it&currency=eur";
+
+  if (type === "flight" && item.code) {
+    return `${base}&q=flights&origin=${item.code}`;
+  }
+  if (type === "hotel" || type === "bnb") {
+    return `${base}&q=hotels&destination=${encodeURIComponent(item.name)}`;
+  }
+  if (type === "car") {
+    return `${base}&q=cars&pickup=${encodeURIComponent(item.name)}`;
+  }
+  // fallback generico
+  return `${base}&q=search&term=${encodeURIComponent(item.name)}`;
+}
+
+/**
+ * 🪄 Hook opzionale: puoi agganciare callback esterne
+ * es. log custom, API interne, ecc.
+ */
+function useExternalHooks(onPick?: (item: Item) => void, onSubmit?: (payload: any) => void) {
+  return {
+    handlePick: (item: Item) => {
+      trackEvent("search_pick", { name: item.name, code: item.code });
+      const url = buildAffiliateUrl(item, item.type || "general");
+      debugLog("Affiliate URL", url);
+      onPick?.(item);
+    },
+    handleSubmit: (payload: any) => {
+      trackEvent("search_submit", payload);
+      debugLog("Submit payload", payload);
+      onSubmit?.(payload);
+    },
+  };
+}
+
+/* ======= Fallback locale esteso ======= */
+const LOCAL_FALLBACK: Item[] = [
+  { key: "barcellona", name: "Barcellona", type: "city", country: "Spagna" },
+  { key: "berlino", name: "Berlino", type: "city", country: "Germania" },
+  { key: "amsterdam", name: "Amsterdam", type: "city", country: "Paesi Bassi" },
+  { key: "lisbona", name: "Lisbona", type: "city", country: "Portogallo" },
+  { key: "newyork", name: "New York", type: "city", country: "USA" },
+  { key: "losangeles", name: "Los Angeles", type: "city", country: "USA" },
+  { key: "dubai", name: "Dubai", type: "city", country: "EAU" },
+  { key: "bangkok", name: "Bangkok", type: "city", country: "Thailandia" },
+  { key: "sydney", name: "Sydney", type: "city", country: "Australia" },
+  { key: "cittadelcapo", name: "Città del Capo", type: "city", country: "Sudafrica" },
+];
+
+/* ======= Estensione della SearchBar con fallback ======= */
+function withLocalFallback(suggestions: Item[], limit = 30): Item[] {
+  const merged = [...suggestions];
+  for (const city of LOCAL_FALLBACK) {
+    if (!merged.find((x) => x.name.toLowerCase() === city.name.toLowerCase())) {
+      merged.push(city);
+    }
+  }
+  return merged.slice(0, limit);
+}

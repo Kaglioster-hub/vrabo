@@ -1,72 +1,68 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 /* ===============================
    Variabili globali VRABO
 =============================== */
 :root {
-  --grad-primary: linear-gradient(90deg,#2563eb,#7c3aed);
-  --grad-glass: rgba(255,255,255,.08);
-  --grad-dark: rgba(17,24,39,.35);
+  --grad-primary: linear-gradient(90deg, #2563eb, #7c3aed);
+  --grad-glass: rgba(255, 255, 255, 0.08);
+  --grad-dark: rgba(17, 24, 39, 0.35);
   --ring: 59 130 246;
 }
 .dark {
-  --grad-glass: rgba(0,0,0,.35);
+  --grad-glass: rgba(0, 0, 0, 0.35);
   --ring: 37 99 235;
 }
 
 /* ===============================
-   Componenti custom
+   Utilities globali extra
 =============================== */
 @layer utilities {
-  /* ---------- Selezione testo & KBD ---------- */
-  ::selection { background: rgba(37,99,235,.18); color: inherit; }
-  .dark ::selection { background: rgba(59,130,246,.25); }
+  /* ---------- Selezione testo ---------- */
+  ::selection {
+    background: rgba(37, 99, 235, 0.18);
+    color: inherit;
+  }
+  .dark ::selection {
+    background: rgba(59, 130, 246, 0.25);
+  }
 
+  /* ---------- KBD ---------- */
   .kbd {
     @apply inline-block rounded-md border border-gray-300 dark:border-gray-700
            bg-white dark:bg-gray-800 px-1.5 py-0.5 text-xs font-mono;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,.12);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
   }
 
-  /* SR-only ma focalizzabile con tastiera */
+  /* ---------- SR-only ma accessibile ---------- */
   .sr-only-focusable:not(:focus):not(:active) {
     position: absolute;
-    width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-  }
-
-  /* ---------- Z-index helpers ---------- */
-  .z-dropdown { z-index: 50; }
-  .z-modal    { z-index: 70; }
-  .z-toast    { z-index: 80; }
-
-  /* ---------- Toast ---------- */
-  .toast {
-    @apply fixed z-toast bottom-4 left-1/2 -translate-x-1/2
-           bg-gray-900 text-white px-4 py-2 rounded-xl shadow-xl
-           flex items-center gap-3;
-  }
-  .toast-success { @apply bg-emerald-600; }
-  .toast-error   { @apply bg-rose-600; }
-
-  /* ---------- Modal ---------- */
-  .modal-overlay {
-    @apply fixed inset-0 z-modal bg-black/60 backdrop-blur-sm;
-  }
-  .modal-sheet {
-    @apply fixed bottom-0 left-0 right-0 z-modal bg-white dark:bg-gray-900
-           rounded-t-2xl shadow-2xl p-6;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   /* ---------- Prose ---------- */
-  .prose-vrabo { @apply prose prose-slate max-w-none; }
-  .dark .prose-vrabo { @apply prose-invert; }
-  .prose-vrabo :where(h1,h2,h3,h4) { scroll-margin-top: 6rem; }
+  .prose-vrabo {
+    @apply prose prose-slate max-w-none;
+  }
+  .dark .prose-vrabo {
+    @apply prose-invert;
+  }
+  .prose-vrabo :where(h1, h2, h3, h4) {
+    scroll-margin-top: 6rem;
+  }
 
   /* ---------- Tabelle ---------- */
-  .table-vrabo { @apply w-full border-separate border-spacing-0 rounded-xl overflow-hidden; }
+  .table-vrabo {
+    @apply w-full border-separate border-spacing-0 rounded-xl overflow-hidden;
+  }
   .table-vrabo thead th {
     @apply bg-gray-100 dark:bg-gray-800 text-left text-sm font-semibold p-3;
   }
@@ -78,77 +74,109 @@
   }
 
   /* ---------- Recharts ---------- */
-  .recharts-wrapper { overflow: visible; }
+  .recharts-wrapper {
+    overflow: visible;
+  }
   .recharts-default-tooltip {
-    background: rgba(17,24,39,.96);
+    background: rgba(17, 24, 39, 0.96);
     color: #fff;
-    border: 1px solid rgba(255,255,255,.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 10px;
     padding: 8px 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   }
   :root:not(.dark) .recharts-default-tooltip {
-    background: rgba(255,255,255,.98);
+    background: rgba(255, 255, 255, 0.98);
     color: #111827;
-    border-color: rgba(0,0,0,.08);
+    border-color: rgba(0, 0, 0, 0.08);
   }
-  .recharts-legend-wrapper { font-size: .85rem; }
-  .chart-card { @apply bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg; }
-
-  /* ---------- Badge ---------- */
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium
-           bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200;
+  .recharts-legend-wrapper {
+    font-size: 0.85rem;
   }
-  .badge-success { @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300; }
-  .badge-danger  { @apply bg-rose-100    text-rose-700    dark:bg-rose-900/40    dark:text-rose-300; }
-  .badge-info    { @apply bg-blue-100    text-blue-700    dark:bg-blue-900/40    dark:text-blue-300; }
+  .chart-card {
+    @apply bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg;
+  }
 
-  /* ---------- Button ---------- */
-  .btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold transition; }
-  .btn-outline { @apply btn border border-gray-300 bg-transparent text-gray-800 dark:text-gray-200; }
-  .btn-success { @apply btn bg-emerald-600 text-white; }
-  .btn-danger  { @apply btn bg-rose-600 text-white; }
-  .btn-gradient { @apply btn text-white shadow-xl; background: var(--grad-primary); }
-
-  /* ---------- Utilities ---------- */
-  .glass      { background: var(--grad-glass); backdrop-filter: blur(8px); }
-  .glass-dark { background: var(--grad-dark);  backdrop-filter: blur(8px); }
-  .mask-soft  { -webkit-mask-image: linear-gradient(#000,transparent); mask-image: linear-gradient(#000,transparent); }
-  .cut-corner { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+  /* ---------- Utilities speciali ---------- */
+  .glass {
+    background: var(--grad-glass);
+    backdrop-filter: blur(8px);
+  }
+  .glass-dark {
+    background: var(--grad-dark);
+    backdrop-filter: blur(8px);
+  }
+  .mask-soft {
+    -webkit-mask-image: linear-gradient(#000, transparent);
+    mask-image: linear-gradient(#000, transparent);
+  }
+  .cut-corner {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 10px) 0,
+      100% 10px,
+      100% 100%,
+      0 100%
+    );
+  }
 
   /* ---------- Hero glow ---------- */
   .hero-glow {
-    position: absolute; inset: auto; width: 48rem; height: 48rem;
-    left: 50%; transform: translateX(-50%);
-    background: radial-gradient(closest-side, rgba(34,197,94,.35), transparent 70%);
+    position: absolute;
+    inset: auto;
+    width: 48rem;
+    height: 48rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: radial-gradient(
+      closest-side,
+      rgba(34, 197, 94, 0.35),
+      transparent 70%
+    );
     filter: blur(40px);
     pointer-events: none;
   }
 
   /* ---------- Print ---------- */
   @media print {
-    .no-print { display: none !important; }
-    body { background: #fff !important; color: #000 !important; }
-    a { color: #000 !important; text-shadow: none !important; }
-    video, .hero-overlay, .video-cover { display: none !important; }
-    .card, .chart-card { box-shadow: none !important; }
+    .no-print {
+      display: none !important;
+    }
+    body {
+      background: #fff !important;
+      color: #000 !important;
+    }
+    a {
+      color: #000 !important;
+      text-shadow: none !important;
+    }
+    video,
+    .hero-overlay,
+    .video-cover {
+      display: none !important;
+    }
+    .card,
+    .chart-card {
+      box-shadow: none !important;
+    }
   }
 
   /* ---------- Forced-colors ---------- */
   @media (forced-colors: active) {
-    :root { --ring: 0 0 0; }
-    .btn, .input, .card { border: 1px solid ButtonText; }
+    :root {
+      --ring: 0 0 0;
+    }
+    .btn,
+    .input,
+    .card {
+      border: 1px solid ButtonText;
+    }
   }
 
-  /* ---------- Micro-interactions ---------- */
-  @keyframes popIn { 0% { transform: scale(.96); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-  .pop-in { animation: popIn .2s ease-out; }
-
-  @keyframes wiggle { 0%,100%{ transform: rotate(0) } 50%{ transform: rotate(-3deg) } }
-  .wiggle:hover { animation: wiggle .25s ease-in-out; }
-
-  /* ---------- Safe utility ring ---------- */
-  .focus-ring { outline: 2px solid rgb(var(--ring)); outline-offset: 2px; border-radius: .75rem; }
+  /* ---------- Safe focus ring ---------- */
+  .focus-ring {
+    outline: 2px solid rgb(var(--ring));
+    outline-offset: 2px;
+    border-radius: 0.75rem;
+  }
 }
-

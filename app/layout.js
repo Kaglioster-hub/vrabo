@@ -1,7 +1,7 @@
 // app/layout.js
 import "../styles/globals.css";
 import Script from "next/script";
-import ThemeProviders from "./ThemeProvider"; // <- corrisponde al tuo file app/ThemeProvider.jsx
+import ThemeProviders from "./ThemeProvider";
 import ThemeToggle from "@/components/ThemeToggle";
 import { headers } from "next/headers";
 
@@ -21,14 +21,14 @@ const SEO_TEXTS = {
   },
 };
 
-function pickLang() {
-  const h = headers();
+async function pickLang() {
+  const h = await headers();
   const al = (h.get("accept-language") || "").toLowerCase();
   return al.startsWith("it") ? "it" : "en";
 }
 
 export async function generateMetadata() {
-  const lng = pickLang();
+  const lng = await pickLang();
   const { title, description, locale } = SEO_TEXTS[lng];
   return {
     title,
@@ -52,8 +52,18 @@ export async function generateMetadata() {
       title,
       description,
       images: [
-        { url: "https://vrabo.it/og-image.png", width: 1200, height: 630, alt: "VRABO comparatore" },
-        { url: "https://vrabo.it/og-alt.png", width: 800, height: 600, alt: "VRABO alternative preview" },
+        {
+          url: "https://vrabo.it/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: "VRABO comparatore",
+        },
+        {
+          url: "https://vrabo.it/og-alt.png",
+          width: 800,
+          height: 600,
+          alt: "VRABO alternative preview",
+        },
       ],
     },
     twitter: {
@@ -84,16 +94,20 @@ export const viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({ children }) {
-  const lng = pickLang();
+export default async function RootLayout({ children }) {
+  const lng = await pickLang();
+
   return (
     <html lang={lng} dir="ltr" suppressHydrationWarning>
-      <body className="bg-gray-100 dark:bg-black text-gray-900 dark:text-gray-100 font-sans antialiased">
+      <body className="min-h-screen flex flex-col bg-gradient-to-b from-vrabo-blue to-vrabo-purple dark:from-gray-900 dark:to-black text-gray-900 dark:text-gray-100 font-sans antialiased">
         <ThemeProviders>
-          {children}
+          <main className="flex-1 flex flex-col items-center justify-center">
+            {children}
+          </main>
           <ThemeToggle />
         </ThemeProviders>
 
+        {/* JSON-LD Schema.org */}
         <Script id="schema-org" type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -114,6 +128,7 @@ export default function RootLayout({ children }) {
           })}
         </Script>
 
+        {/* PWA Service Worker */}
         <Script id="pwa-sw" strategy="afterInteractive">{`
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -128,4 +143,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
