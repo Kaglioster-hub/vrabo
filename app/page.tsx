@@ -91,7 +91,15 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-const POPULAR_CITIES = ["Roma", "Milano", "Firenze", "Napoli", "Parigi", "Londra", "Tokyo"];
+const POPULAR_CITIES = [
+  "Roma",
+  "Milano",
+  "Firenze",
+  "Napoli",
+  "Parigi",
+  "Londra",
+  "Tokyo",
+];
 
 /* ============================================================
    Component – Main Page
@@ -186,8 +194,15 @@ export default function Home() {
       <Navbar />
 
       {/* Analytics */}
-      <Script defer data-domain="vrabo.it" src="https://plausible.io/js/script.js" />
-      <Script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX" />
+      <Script
+        defer
+        data-domain="vrabo.it"
+        src="https://plausible.io/js/script.js"
+      />
+      <Script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"
+      />
       <Script id="ga-init">{`
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
@@ -200,7 +215,7 @@ export default function Home() {
         active={active}
         setActive={setActive}
         recents={recents}
-        doSearch={doSearch}
+        onSearch={doSearch}   // ✅ fix
         affiliateLinks={affiliateLinks}
       />
 
