@@ -254,7 +254,18 @@ function GeneralInput(props: any) {
           if (!val.trim()) setOpen(flat.length > 0);
         }}
         onKeyDown={(e) =>
-          handleKeyDown(e, flat, hi, setHi, pick, doSubmit, val, hint, setVal, setOpen)
+          handleKeyDown(
+            e,
+            flat,
+            hi,
+            setHi,
+            pick,
+            doSubmit,
+            val,
+            hint,
+            setVal,
+            setOpen
+          )
         }
         placeholder={ph}
         autoComplete="off"
