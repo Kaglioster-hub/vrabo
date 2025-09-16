@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, MotionProps } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import SearchBarUltraPro, { Item } from "@/components/SearchBarUltraPro";
 
-// ✅ Fix: wrapper tipizzato che accetta className
-const MotionDiv = motion.div as React.FC<
-  React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }
->;
+// ✅ Fix: MotionDiv che accetta sia className che le prop di Framer Motion
+const MotionDiv: React.FC<
+  React.HTMLAttributes<HTMLDivElement> & MotionProps
+> = motion.div;
 
 /* ============================================================
    Tabs definiti e tipizzati
@@ -61,7 +61,7 @@ export default function Hero({
     <section className="relative min-h-[400px] flex items-center justify-center text-center bg-gradient-to-b from-vrabo-blue via-vrabo-purple to-vrabo-pink">
       <div className="hero-glow" aria-hidden="true" />
 
-      {/* ✅ MotionDiv tipizzato */}
+      {/* ✅ MotionDiv con props tipizzate */}
       <MotionDiv
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
