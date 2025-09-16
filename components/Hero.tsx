@@ -63,94 +63,95 @@ export default function Hero({
       {/* Glow morbido */}
       <div className="hero-glow" aria-hidden="true" />
 
-      {/* Contenuto */}
+      {/* Contenuto animato */}
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 w-full max-w-3xl px-6 flex flex-col items-center"
       >
-        {/* Logo + title */}
-        <Image
-          src="/logo.svg"
-          alt="VRABO"
-          width={96}
-          height={96}
-          priority
-          className="w-24 h-24 bg-black dark:bg-white rounded-2xl p-2 shadow-lg"
-        />
-        <h1 className="mt-4 text-5xl md:text-6xl font-extrabold text-white tracking-tight">
-          VRABO
-        </h1>
-        <p className="mt-3 max-w-xl text-base md:text-lg text-gray-200">
-          {t("heroTitle", "Il comparatore dei comparatori")} —{" "}
-          <span className="font-semibold text-vrabo-gold">
-            {t("heroSubtitle", "non sceglie per te, sceglie con te")}
-          </span>
-        </p>
+        <div className="relative z-10 w-full max-w-3xl px-6 flex flex-col items-center">
+          {/* Logo + title */}
+          <Image
+            src="/logo.svg"
+            alt="VRABO"
+            width={96}
+            height={96}
+            priority
+            className="w-24 h-24 bg-black dark:bg-white rounded-2xl p-2 shadow-lg"
+          />
+          <h1 className="mt-4 text-5xl md:text-6xl font-extrabold text-white tracking-tight">
+            VRABO
+          </h1>
+          <p className="mt-3 max-w-xl text-base md:text-lg text-gray-200">
+            {t("heroTitle", "Il comparatore dei comparatori")} —{" "}
+            <span className="font-semibold text-vrabo-gold">
+              {t("heroSubtitle", "non sceglie per te, sceglie con te")}
+            </span>
+          </p>
 
-        {/* Tabs */}
-        <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-xl">
-          {TABS.map((tdef) => {
-            const activeTab = tab === tdef.id;
-            return (
-              <button
-                key={tdef.id}
-                onClick={() => setTab(tdef.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition border shadow-sm ${
-                  activeTab
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white/90 text-gray-800 dark:bg-gray-800/90 dark:text-white border-gray-300 dark:border-gray-700"
-                }`}
-                aria-pressed={activeTab}
-              >
-                {t(tdef.labelKey)}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search */}
-        <div className="mt-8 w-full">
-          <div className="bg-white/95 dark:bg-gray-900/90 rounded-2xl shadow-xl p-5 backdrop-blur supports-backdrop:bg-white/70">
-            <SearchBarUltraPro
-              mode={searchMode as any}
-              placeholder={t("search.placeholder", "Dove vuoi andare?")}
-              recent={recents}
-              popular={popular}
-              onSubmit={(payload) => {
-                if (onSearch) onSearch({ type: tab, ...payload });
-              }}
-              className="!p-0 bg-transparent shadow-none"
-            />
+          {/* Tabs */}
+          <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-xl">
+            {TABS.map((tdef) => {
+              const activeTab = tab === tdef.id;
+              return (
+                <button
+                  key={tdef.id}
+                  onClick={() => setTab(tdef.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition border shadow-sm ${
+                    activeTab
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white/90 text-gray-800 dark:bg-gray-800/90 dark:text-white border-gray-300 dark:border-gray-700"
+                  }`}
+                  aria-pressed={activeTab}
+                >
+                  {t(tdef.labelKey)}
+                </button>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Affiliate Links */}
-        {affiliateLinks.length > 0 && (
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {affiliateLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-lg bg-vrabo-gold text-black font-medium shadow hover:opacity-90 transition"
-              >
-                {link.name}
-              </a>
-            ))}
+          {/* Search */}
+          <div className="mt-8 w-full">
+            <div className="bg-white/95 dark:bg-gray-900/90 rounded-2xl shadow-xl p-5 backdrop-blur supports-backdrop:bg-white/70">
+              <SearchBarUltraPro
+                mode={searchMode as any}
+                placeholder={t("search.placeholder", "Dove vuoi andare?")}
+                recent={recents}
+                popular={popular}
+                onSubmit={(payload) => {
+                  if (onSearch) onSearch({ type: tab, ...payload });
+                }}
+                className="!p-0 bg-transparent shadow-none"
+              />
+            </div>
           </div>
-        )}
 
-        {/* Scroll hint */}
-        <motion.div
-          className="absolute bottom-8 text-white/70 text-sm"
-          animate={{ y: [0, 6, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-        >
-          ↓ {t("scrollDown", "Scorri per vedere di più")}
-        </motion.div>
+          {/* Affiliate Links */}
+          {affiliateLinks.length > 0 && (
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {affiliateLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-lg bg-vrabo-gold text-black font-medium shadow hover:opacity-90 transition"
+                >
+                  {link.name}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Scroll hint */}
+          <motion.div
+            className="absolute bottom-8 text-white/70 text-sm"
+            animate={{ y: [0, 6, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+          >
+            ↓ {t("scrollDown", "Scorri per vedere di più")}
+          </motion.div>
+        </div>
       </motion.div>
     </section>
   );
