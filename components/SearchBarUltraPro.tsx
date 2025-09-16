@@ -47,30 +47,39 @@ const POPULAR_CITIES: Item[] = [
   { key: "tokyo", name: "Tokyo", type: "city", country: "Giappone" },
 ];
 
-/* ======= LRU cache ======= */
+/* ======= LRU cache (safe per TS e Vercel) ======= */
 class LRUCache<T = any> {
   private map = new Map<string, { val: T; exp: number }>();
+
   constructor(private limit = 100, private ttl = 300000) {}
-  get(k: string) {
+
+  get(k: string): T | undefined {
     const v = this.map.get(k);
     if (!v) return undefined;
     if (v.exp < Date.now()) {
       this.map.delete(k);
       return undefined;
     }
+    // refresh posizione
     this.map.delete(k);
     this.map.set(k, v);
     return v.val;
   }
-  has(k: string) {
+
+  has(k: string): boolean {
     return this.get(k) !== undefined;
   }
-  set(k: string, val: T) {
+
+  set(k: string, val: T): void {
     const exp = Date.now() + this.ttl;
     if (this.map.has(k)) this.map.delete(k);
     this.map.set(k, { val, exp });
+
     if (this.map.size > this.limit) {
-      this.map.delete(this.map.keys().next().value);
+      const firstKey = this.map.keys().next().value as string | undefined;
+      if (firstKey !== undefined) {
+        this.map.delete(firstKey);
+      }
     }
   }
 }
