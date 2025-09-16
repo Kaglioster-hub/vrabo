@@ -77,7 +77,7 @@ export default function SearchBarUltraPro({
   className = "",
   suggestUrl = "/api/suggest",
   debounceMs = 250,
-  minChars = 1, // ⚡ già da 1 carattere parte
+  minChars = 1,
   maxResults = 50,
   preloadOnFocus = true,
   enableVoice = true,
@@ -129,14 +129,22 @@ export default function SearchBarUltraPro({
 
   /* ---------- Placeholder dinamico ---------- */
   const ph = useMemo(() => {
-    if (mode === "flight") return "Da/Per (es. Roma FCO → JFK)";
-    if (mode === "car") return "Punto ritiro auto";
-    if (mode === "bnb" || mode === "hotel") return "Città/Hotel (es. Firenze – Duomo)";
-    return placeholder;
+    switch (mode) {
+      case "flight": return "Da/Per (es. Roma FCO → JFK)";
+      case "car": return "Punto ritiro auto";
+      case "bnb":
+      case "hotel": return "Città/Hotel (es. Firenze – Duomo)";
+      case "connectivity": return "Scegli paese per eSIM (es. Italia, USA)";
+      case "finance": return "Cerca servizi finanziari (es. Carta, Prestito)";
+      case "trading": return "Piattaforma trading (es. Binance)";
+      case "tickets": return "Biglietti ed eventi (es. Concerto Roma)";
+      case "software": return "Software o app (es. VPN, Office)";
+      default: return placeholder;
+    }
   }, [mode, placeholder]);
+
   /* ---------- Hotkeys globali ---------- */
   useEffect(() => {
-    if (!hotkeys) return;
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       const typing =
@@ -188,8 +196,6 @@ export default function SearchBarUltraPro({
 
   /* ---------- Suggest engine ---------- */
   useEffect(() => {
-    if (mode !== "general") return;
-
     if (!val.trim()) {
       setErrMsg("");
       setHint("");
@@ -290,6 +296,7 @@ export default function SearchBarUltraPro({
     setOpen(secs.some((s) => s.items.length));
     setErrMsg("");
   }
+
   /* ---------- Submit ---------- */
   const doSubmit = () => {
     let payload: any = {};
@@ -306,7 +313,6 @@ export default function SearchBarUltraPro({
     onSubmit?.(payload);
     setOpen(false);
   };
-
   const pick = (item: Item) => {
     const name = item?.name ?? "";
     if (!name) return;
@@ -523,7 +529,6 @@ export default function SearchBarUltraPro({
           </button>
         </div>
       )}
-
       {/* Hotel/BnB */}
       {(mode === "hotel" || mode === "bnb") && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -855,65 +860,34 @@ function prevSelectable(flat: any[], h: number) {
   }
   return -1;
 }
-/* ======= Extra Potenziamenti ======= */
 
-/**
- * 🔍 Debug log controllato
- * Abilitalo con localStorage.setItem("vrabo.debug", "1")
- */
+/* ======= Extra Potenziamenti ======= */
 function debugLog(...args: any[]) {
   if (typeof window !== "undefined" && localStorage.getItem("vrabo.debug") === "1") {
     console.debug("[VRABO SearchBar]", ...args);
   }
 }
 
-/**
- * 📈 Tracking eventi per analytics / affiliate
- * Usa un pixel invisibile o un event push su GTM
- */
 function trackEvent(event: string, payload: Record<string, any> = {}) {
   debugLog("trackEvent", event, payload);
-
-  // esempio: push su dataLayer
   if (typeof window !== "undefined" && (window as any).dataLayer) {
-    (window as any).dataLayer.push({
-      event,
-      ...payload,
-    });
+    (window as any).dataLayer.push({ event, ...payload });
   }
-
-  // esempio: pixel invisibile
   const img = new Image();
-  img.src =
-    `/api/track?e=${encodeURIComponent(event)}&d=${encodeURIComponent(
-      JSON.stringify(payload)
-    )}&ts=${Date.now()}`;
+  img.src = `/api/track?e=${encodeURIComponent(event)}&d=${encodeURIComponent(
+    JSON.stringify(payload)
+  )}&ts=${Date.now()}`;
 }
 
-/**
- * 🎯 Costruzione link affiliate (Travelpayouts / Booking / etc.)
- * Sostituisce query dirette con URL contenenti ID di affiliazione.
- */
 function buildAffiliateUrl(item: Item, type: string) {
   const base = "https://tp.media/r?marker=YOUR_MARKER&locale=it&currency=eur";
-
-  if (type === "flight" && item.code) {
-    return `${base}&q=flights&origin=${item.code}`;
-  }
-  if (type === "hotel" || type === "bnb") {
+  if (type === "flight" && item.code) return `${base}&q=flights&origin=${item.code}`;
+  if (type === "hotel" || type === "bnb")
     return `${base}&q=hotels&destination=${encodeURIComponent(item.name)}`;
-  }
-  if (type === "car") {
-    return `${base}&q=cars&pickup=${encodeURIComponent(item.name)}`;
-  }
-  // fallback generico
+  if (type === "car") return `${base}&q=cars&pickup=${encodeURIComponent(item.name)}`;
   return `${base}&q=search&term=${encodeURIComponent(item.name)}`;
 }
 
-/**
- * 🪄 Hook opzionale: puoi agganciare callback esterne
- * es. log custom, API interne, ecc.
- */
 function useExternalHooks(onPick?: (item: Item) => void, onSubmit?: (payload: any) => void) {
   return {
     handlePick: (item: Item) => {
@@ -942,6 +916,16 @@ const LOCAL_FALLBACK: Item[] = [
   { key: "bangkok", name: "Bangkok", type: "city", country: "Thailandia" },
   { key: "sydney", name: "Sydney", type: "city", country: "Australia" },
   { key: "cittadelcapo", name: "Città del Capo", type: "city", country: "Sudafrica" },
+];
+
+const CONNECTIVITY_FALLBACK: Item[] = [
+  { key: "it", name: "Italia", type: "country" },
+  { key: "us", name: "USA", type: "country" },
+  { key: "jp", name: "Giappone", type: "country" },
+  { key: "th", name: "Thailandia", type: "country" },
+  { key: "es", name: "Spagna", type: "country" },
+  { key: "fr", name: "Francia", type: "country" },
+  { key: "uk", name: "Regno Unito", type: "country" },
 ];
 
 /* ======= Estensione della SearchBar con fallback ======= */

@@ -11,7 +11,7 @@ function makeAff(name, envVar) {
     if (process.env.NODE_ENV !== "production") {
       console.warn(`⚠️ Affiliate link mancante per: ${name}`);
     }
-    return { name, url: "#", valid: false };
+    return null;
   }
   return { name, url: envVar, valid: true };
 }
@@ -19,20 +19,20 @@ function makeAff(name, envVar) {
 const affiliates = {
   // === HOTEL / BnB ===
   hotels: [
-    makeAff("Booking", process.env.NEXT_PUBLIC_AFF_ID_HOTEL),
+    makeAff("Trip.com Hotels", process.env.NEXT_PUBLIC_AFF_ID_HOTEL),
     makeAff("Airbnb", process.env.NEXT_PUBLIC_AFF_ID_BNB),
   ],
 
   // === VOLI ===
   flights: [
-    makeAff("Aviasales", process.env.NEXT_PUBLIC_AFF_ID_FLIGHT),
+    makeAff("Trip.com Flights", process.env.NEXT_PUBLIC_AFF_ID_FLIGHT),
     makeAff("Kiwi", process.env.NEXT_PUBLIC_AFF_ID_FLIGHT2),
     makeAff("Skyscanner", process.env.NEXT_PUBLIC_AFF_ID_FLIGHT3),
   ],
 
   // === AUTO ===
   cars: [
-    makeAff("Localrent", process.env.NEXT_PUBLIC_AFF_ID_CAR),
+    makeAff("Trip.com Cars", process.env.NEXT_PUBLIC_AFF_ID_CAR),
     makeAff("Economybookings", process.env.NEXT_PUBLIC_AFF_ID_CAR2),
     makeAff("QEEQ", process.env.NEXT_PUBLIC_AFF_ID_CAR3),
     makeAff("GetRentacar", process.env.NEXT_PUBLIC_AFF_ID_CAR4),
@@ -67,7 +67,7 @@ const affiliates = {
     makeAff("DrimSim", process.env.NEXT_PUBLIC_AFF_ID_CONNECTIVITY3),
   ],
 
-  // === VPN (sottocategoria Connessione) ===
+  // === VPN ===
   vpn: [
     makeAff("NordVPN", process.env.NEXT_PUBLIC_AFF_ID_VPN1),
     makeAff("Surfshark", process.env.NEXT_PUBLIC_AFF_ID_VPN2),
@@ -77,15 +77,15 @@ const affiliates = {
   // === EXTRA ===
   extra: [
     makeAff("Amazon", process.env.NEXT_PUBLIC_AFF_ID_AMAZON),
-    makeAff("NordVPN (duplicato safe)", process.env.NEXT_PUBLIC_AFF_ID_SOFTWARE),
+    makeAff("Software", process.env.NEXT_PUBLIC_AFF_ID_SOFTWARE),
   ],
 };
 
 // Helpers
 export const getAffiliatesByCategory = (category) =>
-  affiliates[category] || [];
+  (affiliates[category] || []).filter(Boolean);
 
 export const getAllAffiliates = () =>
-  Object.values(affiliates).flat();
+  Object.values(affiliates).flat().filter(Boolean);
 
 export default affiliates;

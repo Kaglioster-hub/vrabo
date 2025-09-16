@@ -1,8 +1,4 @@
-// pages/api/suggest.js
-// ============================================================================
-// VRABO – Suggest API SUPREME 1000x
-// - Autocomplete Travelpayouts con ranking avanzato, fuzzy, cache LRU, retry pro
-// ============================================================================
+import { NextResponse } from "next/server";
 
 const TP_AUTOCOMPLETE = "https://autocomplete.travelpayouts.com/places2";
 const DEBUG = process.env.NODE_ENV !== "production";
@@ -17,21 +13,19 @@ function cacheGet(key) {
     cache.delete(key);
     return null;
   }
-  // refresh LRU
   cache.delete(key);
   cache.set(key, hit);
   return hit.val;
 }
 function cacheSet(key, val, ttl = 300000) {
   if (cache.size > MAX_CACHE) {
-    // delete first (LRU)
     const first = cache.keys().next().value;
     cache.delete(first);
   }
   cache.set(key, { val, exp: Date.now() + ttl });
 }
 
-// ================= RATE LIMIT (per IP) =================
+// ================= RATE LIMIT =================
 const BUCKET = new Map();
 const WINDOW_MS = 5000;
 const MAX_REQ = 30;
@@ -62,7 +56,6 @@ async function fetchRetry(url, retries = 3, delay = 400, timeout = 4000) {
       clearTimeout(t);
       lastErr = err;
       if (i === retries) break;
-      // exponential backoff con jitter
       const jitter = Math.random() * 100;
       await new Promise((res) => setTimeout(res, delay * 2 ** i + jitter));
     }
@@ -81,7 +74,7 @@ function normalize(x) {
   };
 }
 
-// fuzzy match semplificato (levenshtein distanza)
+// fuzzy match semplificato
 function levenshtein(a, b) {
   if (!a || !b) return 99;
   const m = [];
@@ -107,17 +100,14 @@ function rankSuggestions(list, q = "", home = "", mode = "general", lng = "it") 
       else if (nameLc.includes(query)) score += 60;
 
       if (s.code.toLowerCase().startsWith(query)) score += 150;
-
       if (s.type === "airport" && mode === "flight") score += 70;
       if (s.type === "hotel" && (mode === "hotel" || mode === "bnb")) score += 50;
       if (s.country.toLowerCase().includes(home.toLowerCase())) score += 30;
       if (s.isCapital) score += 40;
 
-      // fuzzy: penalità più bassa = più vicino
       const dist = levenshtein(nameLc, query);
       score += Math.max(0, 30 - dist);
 
-      // boost lingua
       if (lng === "it" && ["roma", "milano", "venezia"].includes(nameLc)) score += 25;
 
       score += Math.min(50, s.weight / 500);
@@ -138,24 +128,32 @@ const FALLBACK = [
   { name: "Bangkok", code: "BKK", type: "city", country: "Thailandia" },
 ];
 
-// ================= HANDLER =================
-export default async function handler(req, res) {
-  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket?.remoteAddress || "";
-  if (limited(ip)) return res.status(429).json({ error: "Too Many Requests" });
+// ================= HANDLER (App Router) =================
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const q = String(searchParams.get("q") || "").trim();
+  const lng = (searchParams.get("lng") || "it").toString().trim().toLowerCase();
+  const home = String(searchParams.get("home") || "").trim();
+  const mode = String(searchParams.get("mode") || "general").trim();
+  const limit = Math.min(parseInt(searchParams.get("limit") || "12", 10), 50);
 
-  const q = String(req.query.q || "").trim();
-  const lng = (req.query.lng || "it").toString().trim().toLowerCase();
-  const home = String(req.query.home || "").trim();
-  const mode = String(req.query.mode || "general").trim();
-  const limit = Math.min(parseInt(req.query.limit || "12", 10), 50);
+  // IP rate-limit
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0] ||
+    "0.0.0.0";
+  if (limited(ip)) {
+    return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
+  }
 
   if (!q) {
-    return res.status(200).json({ suggestions: FALLBACK.slice(0, limit) });
+    return NextResponse.json({ suggestions: FALLBACK.slice(0, limit) });
   }
 
   const key = `sug:${lng}:${mode}:${q}`;
   const cached = cacheGet(key);
-  if (cached) return res.status(200).json({ suggestions: cached.slice(0, limit), cached: true });
+  if (cached) {
+    return NextResponse.json({ suggestions: cached.slice(0, limit), cached: true });
+  }
 
   try {
     const url = `${TP_AUTOCOMPLETE}?term=${encodeURIComponent(q)}&locale=${lng}&types[]=city&types[]=airport&types[]=region&types[]=country&types[]=station`;
@@ -175,9 +173,9 @@ export default async function handler(req, res) {
 
     const ranked = rankSuggestions(suggestions, q, home, mode, lng).slice(0, limit);
     cacheSet(key, ranked);
-    return res.status(200).json({ suggestions: ranked, cached: false });
+    return NextResponse.json({ suggestions: ranked, cached: false });
   } catch (err) {
     if (DEBUG) console.error("Suggest API error:", err);
-    return res.status(200).json({ suggestions: FALLBACK.slice(0, limit), fallback: true });
+    return NextResponse.json({ suggestions: FALLBACK.slice(0, limit), fallback: true });
   }
 }

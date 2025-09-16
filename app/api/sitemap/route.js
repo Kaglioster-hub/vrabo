@@ -1,10 +1,6 @@
-// pages/api/sitemap.js
-// =============================================================
-// VRABO – Sitemap Generator SUPREME 1000x
-// - Statiche + sezioni dinamiche + SEO best practices
-// =============================================================
+import { NextResponse } from "next/server";
 
-export default async function handler(req, res) {
+export async function GET() {
   const base = "https://vrabo.it";
   const now = new Date().toISOString();
 
@@ -27,8 +23,7 @@ export default async function handler(req, res) {
     "energy",
   ];
 
-  // Se in futuro hai dynamic route (es. /bnb/[city]) puoi generarle qui
-  // mock cities (in futuro fetch dal DB o API)
+  // Mock dynamic routes (in futuro: fetch da DB/API)
   const cities = ["roma", "milano", "napoli", "parigi", "londra", "tokyo"];
   const dynamicRoutes = cities.map((c) => `/bnb/${c}`);
 
@@ -38,10 +33,6 @@ export default async function handler(req, res) {
     ...sections.map((s) => `${base}/${s}`),
     ...dynamicRoutes.map((u) => `${base}${u}`),
   ];
-
-  // Header SEO/XML
-  res.setHeader("Content-Type", "application/xml");
-  res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
 
   // XML Sitemap
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -59,5 +50,11 @@ export default async function handler(req, res) {
       .join("")}
   </urlset>`;
 
-  res.end(sitemap);
+  return new NextResponse(sitemap, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/xml",
+      "Cache-Control": "s-maxage=3600, stale-while-revalidate",
+    },
+  });
 }

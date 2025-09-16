@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 import SearchBarUltraPro, { Item } from "@/components/SearchBarUltraPro";
 
 /* ============================================================
@@ -29,6 +30,7 @@ interface HeroProps {
   onSearch?: (payload: any) => void;
   recents?: Item[];
   popular?: Item[];
+  affiliateLinks?: { name: string; url: string }[];
 }
 
 /* ============================================================
@@ -40,6 +42,7 @@ export default function Hero({
   onSearch,
   recents = [],
   popular = [],
+  affiliateLinks = [],
 }: HeroProps) {
   const { t } = useTranslation();
 
@@ -56,7 +59,7 @@ export default function Hero({
   }, [tab]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center text-center bg-gradient-to-b from-vrabo-blue via-vrabo-purple to-vrabo-pink">
+    <section className="relative min-h-[400px] flex items-center justify-center text-center bg-gradient-to-b from-vrabo-blue via-vrabo-purple to-vrabo-pink">
       {/* Glow morbido */}
       <div className="hero-glow" aria-hidden="true" />
 
@@ -68,20 +71,21 @@ export default function Hero({
         className="relative z-10 w-full max-w-3xl px-6 flex flex-col items-center"
       >
         {/* Logo + title */}
-        <img
+        <Image
           src="/logo.svg"
           alt="VRABO"
           width={96}
           height={96}
+          priority
           className="w-24 h-24 bg-black dark:bg-white rounded-2xl p-2 shadow-lg"
         />
         <h1 className="mt-4 text-5xl md:text-6xl font-extrabold text-white tracking-tight">
           VRABO
         </h1>
         <p className="mt-3 max-w-xl text-base md:text-lg text-gray-200">
-          {t("heroTitle")} —{" "}
+          {t("heroTitle", "Il comparatore dei comparatori")} —{" "}
           <span className="font-semibold text-vrabo-gold">
-            {t("heroSubtitle")}
+            {t("heroSubtitle", "non sceglie per te, sceglie con te")}
           </span>
         </p>
 
@@ -121,6 +125,23 @@ export default function Hero({
             />
           </div>
         </div>
+
+        {/* Affiliate Links */}
+        {affiliateLinks.length > 0 && (
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {affiliateLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-lg bg-vrabo-gold text-black font-medium shadow hover:opacity-90 transition"
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Scroll hint */}
         <motion.div

@@ -1,4 +1,4 @@
-// pages/api/track.js
+import { NextResponse } from "next/server";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -18,8 +18,8 @@ const HMAC_SECRET = process.env.TRACK_HMAC_SECRET || "";
 const LOG_TO_FILE = process.env.TRACK_LOG_TO_FILE === "1";
 
 const BUCKET = new Map();
-const WINDOW_MS = 10_000; // 10s
-const MAX_HITS = 50; // più tollerante
+const WINDOW_MS = 10_000;
+const MAX_HITS = 50;
 
 // ====================== RATE LIMIT ======================
 function limited(ip) {
@@ -35,19 +35,6 @@ function limited(ip) {
 }
 
 // ====================== HELPERS ======================
-function addHeaders(res) {
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'none'; img-src * data:; script-src 'none'; style-src 'unsafe-inline'; connect-src *"
-  );
-}
-
 function safeURL(raw) {
   if (!raw) return null;
   const s = raw.trim();
@@ -99,16 +86,21 @@ async function log(entry) {
   }
 }
 
-// ====================== HANDLER ======================
-export default async function handler(req, res) {
-  addHeaders(res);
+// ====================== HANDLER (App Router) ======================
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
 
-  if (req.method === "OPTIONS") return res.status(204).end();
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "0.0.0.0";
+  if (limited(ip)) {
+    return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
+  }
 
-  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket?.remoteAddress || "";
-  if (limited(ip)) return res.status(429).json({ error: "Too Many Requests" });
-
-  const { url = "", b64 = "", sig = "", tab = "generic", title = "", lang = "it" } = req.query;
+  const url = searchParams.get("url") || "";
+  const b64 = searchParams.get("b64") || "";
+  const sig = searchParams.get("sig") || "";
+  const tab = searchParams.get("tab") || "generic";
+  const title = searchParams.get("title") || "";
+  const lang = searchParams.get("lang") || "it";
 
   // 1. Decode
   let raw = url.toString().trim();
@@ -118,48 +110,59 @@ export default async function handler(req, res) {
     } catch {}
   }
 
-  // FIX: invalid / empty / hash-only → redirect home
+  // Invalid → redirect home
   if (!raw || raw === "#" || raw.toLowerCase() === "null") {
-    return res.redirect(302, "/");
+    return NextResponse.redirect(new URL("/", req.url), 302);
   }
 
   // 2. Verify HMAC
-  if (!verify(raw, sig)) return res.status(400).json({ error: "Invalid signature" });
+  if (!verify(raw, sig)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
 
   // 3. Normalize
   const finalUrl = safeURL(raw);
   if (!finalUrl || finalUrl === "#" || finalUrl === "https://") {
-    return res.redirect(302, "/");
+    return NextResponse.redirect(new URL("/", req.url), 302);
   }
 
   // 4. Prevent loops
-  if (finalUrl.startsWith("/api/track")) return res.status(400).json({ error: "Loop detected" });
+  if (finalUrl.startsWith("/api/track")) {
+    return NextResponse.json({ error: "Loop detected" }, { status: 400 });
+  }
 
   // 5. Check allow/deny
   if (!finalUrl.startsWith("/")) {
     const host = hostnameOf(finalUrl);
-    if (inDeny(host)) return res.redirect(302, "/");
-    if (!inAllow(host)) return res.redirect(302, "/");
+    if (inDeny(host)) return NextResponse.redirect(new URL("/", req.url), 302);
+    if (!inAllow(host)) return NextResponse.redirect(new URL("/", req.url), 302);
   }
 
   // 6. Build log entry
-  const ua = req.headers["user-agent"] || "";
+  const ua = req.headers.get("user-agent") || "";
   const entry = {
     time: new Date().toISOString(),
     ip,
     ua,
     user: anonUser(ip, ua),
-    ref: req.headers["referer"] || "",
+    ref: req.headers.get("referer") || "",
     target: finalUrl,
     tab,
     title,
     lang,
   };
 
-  // 7. Async log (non blocca redirect)
+  // 7. Async log
   log(entry);
 
   // 8. Redirect finale
-  res.writeHead(302, { Location: finalUrl });
-  res.end();
+  try {
+    return NextResponse.redirect(finalUrl, 302);
+  } catch {
+    return NextResponse.redirect(new URL("/", req.url), 302);
+  }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 });
 }

@@ -3,16 +3,31 @@
 import { useMemo } from "react";
 import affiliates from "@/config/affiliates";
 
+type Category =
+  | "bnb"
+  | "flight"
+  | "car"
+  | "finance"
+  | "trading"
+  | "tickets"
+  | "connectivity"
+  | "amazon"
+  | "vpn"
+  | "software";
+
+type Affiliate = {
+  name: string;
+  url: string;
+  valid?: boolean;
+};
+
 /**
  * Restituisce gli affiliati validi per categoria,
  * filtrando quelli senza URL (env non configurato).
- *
- * @param {"bnb"|"flight"|"car"|"finance"|"trading"|"tickets"|"connectivity"} category
- * @returns {{ name: string, url: string, valid: boolean }[]}
  */
-export default function useAffiliate(category) {
+export default function useAffiliate(category: Category): Affiliate[] {
   return useMemo(() => {
-    let key = null;
+    let key: keyof typeof affiliates | null = null;
 
     switch (category) {
       case "bnb":
@@ -31,8 +46,17 @@ export default function useAffiliate(category) {
         key = "connectivity";
         break;
       case "finance":
+        key = "finance";
+        break;
       case "trading":
-        key = "extra";
+        key = "trading";
+        break;
+      case "amazon":
+      case "software":
+        key = "extra"; // 👈 stanno dentro extra
+        break;
+      case "vpn":
+        key = "vpn";
         break;
       default:
         key = null;
@@ -43,7 +67,7 @@ export default function useAffiliate(category) {
     return affiliates[key]
       .map((a) => ({
         ...a,
-        valid: Boolean(a.url && a.url.startsWith("http")),
+        valid: Boolean(a && a.url && a.url.startsWith("http")),
       }))
       .filter((a) => a.valid);
   }, [category]);

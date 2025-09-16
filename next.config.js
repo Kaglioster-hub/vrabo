@@ -14,18 +14,17 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const nextConfig = withBundleAnalyzer(
   withPWA({
     reactStrictMode: true,
-    swcMinify: true,
     compress: true,
     poweredByHeader: false,
     trailingSlash: false,
     generateEtags: true,
 
-    // 🚀 Sperimentali puliti
+    // 🚀 Sperimentali
     experimental: {
       optimizePackageImports: ["recharts", "framer-motion"],
     },
 
-    // 🌍 Multilingua
+    // 🌍 Multilingua (⚠️ solo documentativo in App Router)
     i18n: {
       locales: ["it", "en", "fr", "es", "pt", "ja", "zh"],
       defaultLocale: "it",
@@ -39,6 +38,7 @@ const nextConfig = withBundleAnalyzer(
         "img.freepik.com",
         "media.istockphoto.com",
         "cdn.vrabo.it",
+        "picsum.photos",
       ],
       formats: ["image/avif", "image/webp"],
       minimumCacheTTL: 60,
