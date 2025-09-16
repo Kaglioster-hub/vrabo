@@ -232,6 +232,7 @@ function GeneralInput(props: any) {
     loading,
     ph,
   } = props;
+
   return (
     <div className="relative">
       {/* Ghost hint */}
@@ -268,7 +269,11 @@ function GeneralInput(props: any) {
 
       {/* Controls */}
       <div className="absolute inset-y-0 right-2 flex items-center gap-1 z-20">
-        {enableVoice && <IconBtn title="Dettatura vocale" onClick={onVoice}>🎤</IconBtn>}
+        {enableVoice && (
+          <IconBtn title="Dettatura vocale" onClick={onVoice}>
+            🎤
+          </IconBtn>
+        )}
         {showClear && (
           <IconBtn
             title="Pulisci"
@@ -341,205 +346,4 @@ function GeneralInput(props: any) {
       )}
     </div>
   );
-}
-
-function IconBtn({ children, title, onClick, className = "" }) {
-  return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className={`px-2 py-1 text-sm rounded-md bg-gray-100 hover:bg-gray-200 
-        dark:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 
-        focus:ring-blue-400 ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
-function RowInfo({ text }: { text: string }) {
-  return (
-    <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-      {text}
-    </div>
-  );
-}
-function iconFor(type?: string) {
-  switch (type) {
-    case "airport": return "🛫";
-    case "city": return "🏙️";
-    case "hotel": return "🏨";
-    case "car": return "🚗";
-    default: return "📍";
-  }
-}
-
-/* --- Utils --- */
-function normalizeArray(arr: any[]) {
-  return (arr || [])
-    .map((x) => {
-      if (typeof x === "string") return { key: slug(x), name: x };
-      const key = x.key ?? slug(x.name ?? JSON.stringify(x));
-      return { ...x, key };
-    })
-    .filter(Boolean);
-}
-function flattenSections(sections: any[]) {
-  const out: any[] = [];
-  for (const s of sections) {
-    if (!s.items?.length) continue;
-    out.push({ __type: "header", key: s.key, title: s.title });
-    for (const it of s.items) out.push({ __type: "item", item: it });
-  }
-  return out;
-}
-function firstRowIndex(flat: any[]) {
-  if (!flat?.length) return -1;
-  const idx = flat.findIndex((r) => r.__type === "item");
-  return idx === -1 ? -1 : idx;
-}
-function validHint(val: string, hint: string) {
-  if (!val || !hint) return false;
-  return hint.toLowerCase().startsWith(val.toLowerCase()) && hint.toLowerCase() !== val.toLowerCase();
-}
-function bestHint(items: Item[], q: string) {
-  if (!q) return "";
-  const x = items.find((i) => i.name?.toLowerCase().startsWith(q.toLowerCase()));
-  return x?.name || "";
-}
-function bestHintFromSections(sections: any[], q: string) {
-  for (const s of sections) {
-    const h = bestHint(s.items || [], q);
-    if (h) return h;
-  }
-  return "";
-}
-function highlightText(text: string, q: string) {
-  if (!q) return text;
-  const i = text.toLowerCase().indexOf(q.toLowerCase());
-  if (i < 0) return text;
-  return (
-    <span>
-      {text.slice(0, i)}
-      <mark className="bg-yellow-200 dark:bg-yellow-600">
-        {text.slice(i, i + q.length)}
-      </mark>
-      {text.slice(i + q.length)}
-    </span>
-  );
-}
-function slug(s: string) {
-  return (s || "")
-    .toString()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-function loadHistory(storageKey: string, seed = []) {
-  if (typeof window === "undefined") return normalizeArray(seed);
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return normalizeArray(seed);
-    return normalizeArray(JSON.parse(raw));
-  } catch {
-    return normalizeArray(seed);
-  }
-}
-function saveHistory(storageKey: string, historyRef: any, name: string, max = 12) {
-  const item = typeof name === "string" ? { name } : name;
-  const current = normalizeArray(historyRef.current);
-  const dedup = [item, ...current].reduce((acc: any[], it: any) => {
-    if (acc.find((x) => x.name.toLowerCase() === it.name.toLowerCase())) return acc;
-    acc.push(it);
-    return acc;
-  }, []);
-  const clipped = dedup.slice(0, max);
-  historyRef.current = clipped;
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(clipped));
-  } catch {}
-}
-function fuzzyFilterSections(sections: any[], q: string) {
-  if (!q) return sections;
-  const QQ = q.toLowerCase();
-  const score = (name: string) => {
-    const s = (name || "").toLowerCase();
-    let i = 0, j = 0, hits = 0;
-    while (i < QQ.length && j < s.length) {
-      if (QQ[i] === s[j]) { hits++; i++; }
-      j++;
-    }
-    const pref = s.startsWith(QQ) ? 100 : 0;
-    return pref + hits - Math.max(0, s.length - QQ.length) * 0.01;
-  };
-  return sections
-    .map((sec) => {
-      const items = (sec.items || [])
-        .map((it: Item) => ({ it, sc: score(it.name || "") }))
-        .filter((x) => x.sc > 0)
-        .sort((a, b) => b.sc - a.sc)
-        .map((x) => x.it)
-        .slice(0, 20);
-      return { ...sec, items };
-    })
-    .filter((s) => s.items.length);
-}
-function handleKeyDown(
-  e: React.KeyboardEvent,
-  flat: any[],
-  hi: number,
-  setHi: (i: number) => void,
-  pick: (item: Item) => void,
-  doSubmit: () => void,
-  val: string,
-  hint: string,
-  setVal: (v: string) => void,
-  setOpen: (v: boolean) => void
-) {
-  if (!flat?.length && e.key === "Enter") {
-    e.preventDefault();
-    if (validHint(val, hint)) setVal(hint);
-    else doSubmit();
-    return;
-  }
-  if (e.key === "ArrowDown" && flat?.length) {
-    e.preventDefault();
-    const i = nextSelectable(flat, hi);
-    setHi(i);
-  } else if (e.key === "ArrowUp" && flat?.length) {
-    e.preventDefault();
-    const i = prevSelectable(flat, hi);
-    setHi(i);
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    if (hi >= 0 && flat?.[hi]?.item) pick(flat[hi].item);
-    else if (validHint(val, hint)) setVal(hint);
-    else doSubmit();
-  } else if (e.key === "Escape") {
-    setOpen(false);
-  } else if (e.key === "Tab") {
-    if (!e.shiftKey && validHint(val, hint)) {
-      setVal(hint);
-      e.preventDefault();
-    }
-  }
-}
-function nextSelectable(flat: any[], h: number) {
-  if (!flat?.length) return -1;
-  let i = h;
-  for (let step = 0; step < flat.length; step++) {
-    i = (i + 1) % flat.length;
-    if (flat[i].__type === "item") return i;
-  }
-  return -1;
-}
-function prevSelectable(flat: any[], h: number) {
-  if (!flat?.length) return -1;
-  let i = h;
-  for (let step = 0; step < flat.length; step++) {
-    i = (i - 1 + flat.length) % flat.length;
-    if (flat[i].__type === "item") return i;
-  }
-  return -1;
 }
