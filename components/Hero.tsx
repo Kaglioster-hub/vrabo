@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import SearchBarUltraPro, { Item } from "@/components/SearchBarUltraPro";
 
-/* MotionDiv tipizzato: accetta className senza errori */
-const MotionDiv: React.FC<HTMLMotionProps<"div">> = motion.div;
+// ✅ Fix: wrapper tipizzato che accetta className
+const MotionDiv = motion.div as React.FC<
+  React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode }
+>;
 
 /* ============================================================
    Tabs definiti e tipizzati
@@ -24,9 +26,6 @@ export const TABS = [
 
 export type TabId = (typeof TABS)[number]["id"];
 
-/* ============================================================
-   Props
-============================================================ */
 interface HeroProps {
   active?: TabId;
   setActive?: (tab: TabId) => void;
@@ -36,9 +35,6 @@ interface HeroProps {
   affiliateLinks?: { name: string; url: string }[];
 }
 
-/* ============================================================
-   Component
-============================================================ */
 export default function Hero({
   active,
   setActive,
@@ -63,17 +59,15 @@ export default function Hero({
 
   return (
     <section className="relative min-h-[400px] flex items-center justify-center text-center bg-gradient-to-b from-vrabo-blue via-vrabo-purple to-vrabo-pink">
-      {/* Glow morbido */}
       <div className="hero-glow" aria-hidden="true" />
 
-      {/* Contenuto animato */}
+      {/* ✅ MotionDiv tipizzato */}
       <MotionDiv
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-3xl px-6 flex flex-col items-center"
       >
-        {/* Logo + title */}
         <Image
           src="/logo.svg"
           alt="VRABO"
