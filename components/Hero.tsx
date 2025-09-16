@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import SearchBarUltraPro, { Item } from "@/components/SearchBarUltraPro";
 
-// ✅ Fix: MotionDiv che accetta sia className che le prop di Framer Motion
+/* ============================================================
+   Motion helpers tipizzati
+============================================================ */
 const MotionDiv: React.FC<
   React.HTMLAttributes<HTMLDivElement> & MotionProps
 > = motion.div;
@@ -26,6 +28,9 @@ export const TABS = [
 
 export type TabId = (typeof TABS)[number]["id"];
 
+/* ============================================================
+   Props
+============================================================ */
 interface HeroProps {
   active?: TabId;
   setActive?: (tab: TabId) => void;
@@ -35,6 +40,9 @@ interface HeroProps {
   affiliateLinks?: { name: string; url: string }[];
 }
 
+/* ============================================================
+   Component
+============================================================ */
 export default function Hero({
   active,
   setActive,
@@ -59,15 +67,17 @@ export default function Hero({
 
   return (
     <section className="relative min-h-[400px] flex items-center justify-center text-center bg-gradient-to-b from-vrabo-blue via-vrabo-purple to-vrabo-pink">
+      {/* Glow morbido */}
       <div className="hero-glow" aria-hidden="true" />
 
-      {/* ✅ MotionDiv con props tipizzate */}
+      {/* Contenuto */}
       <MotionDiv
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-3xl px-6 flex flex-col items-center"
       >
+        {/* Logo + title */}
         <Image
           src="/logo.svg"
           alt="VRABO"
@@ -141,13 +151,13 @@ export default function Hero({
         )}
 
         {/* Scroll hint */}
-        <motion.div
+        <MotionDiv
           className="absolute bottom-8 text-white/70 text-sm"
           animate={{ y: [0, 6, 0] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
         >
           ↓ {t("scrollDown", "Scorri per vedere di più")}
-        </motion.div>
+        </MotionDiv>
       </MotionDiv>
     </section>
   );
