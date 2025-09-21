@@ -1,0 +1,119 @@
+[
+  {
+    "name": "Trip.com Hotels",
+    "url": "trip_hotels",
+    "logo": "/logos/trip.png",
+    "affKey": "trip_hotels",
+    "categories": [
+      "hotels"
+    ]
+  },
+  {
+    "name": "Trip.com Flights",
+    "url": "trip_flights",
+    "logo": "/logos/trip.png",
+    "affKey": "trip_flights",
+    "categories": [
+      "flights"
+    ]
+  },
+  {
+    "name": "Trip.com Cars",
+    "url": "trip_cars",
+    "logo": "/logos/trip.png",
+    "affKey": "trip_cars",
+    "categories": [
+      "cars"
+    ]
+  },
+  {
+    "name": "Localrent",
+    "url": "localrent",
+    "logo": "/logos/localrent.png",
+    "affKey": "localrent",
+    "categories": [
+      "cars"
+    ]
+  },
+  {
+    "name": "GetYourGuide",
+    "url": "gyg",
+    "logo": "/logos/gyg.png",
+    "affKey": "gyg",
+    "categories": [
+      "tickets"
+    ]
+  },
+  {
+    "name": "Tiqets",
+    "url": "tiqets",
+    "logo": "/logos/tiqets.png",
+    "affKey": "tiqets",
+    "categories": [
+      "tickets"
+    ]
+  },
+  {
+    "name": "TicketNetwork",
+    "url": "ticketnetwork",
+    "logo": "/logos/ticketnetwork.png",
+    "affKey": "ticketnetwork",
+    "categories": [
+      "tickets"
+    ]
+  },
+  {
+    "name": "Yesim eSIM",
+    "url": "yesim",
+    "logo": "/logos/yesim.png",
+    "affKey": "yesim",
+    "categories": [
+      "connectivity"
+    ]
+  },
+  {
+    "name": "Airalo",
+    "url": "airalo",
+    "logo": "/logos/airalo.png",
+    "affKey": "airalo",
+    "categories": [
+      "connectivity"
+    ]
+  },
+  {
+    "name": "Drimsim",
+    "url": "drimsim",
+    "logo": "/logos/drimsim.png",
+    "affKey": "drimsim",
+    "categories": [
+      "connectivity"
+    ]
+  },
+  {
+    "name": "Compensair",
+    "url": "compensair",
+    "logo": "/logos/compensair.png",
+    "affKey": "compensair",
+    "categories": [
+      "insurance"
+    ]
+  },
+  {
+    "name": "Binance (CPA)",
+    "url": "binance_cpa",
+    "logo": "/logos/binance.png",
+    "affKey": "binance_cpa",
+    "categories": [
+      "trading"
+    ]
+  },
+  {
+    "name": "Amazon",
+    "url": "amazon",
+    "logo": "/logos/amazon.png",
+    "affKey": "amazon",
+    "categories": [
+      "shopping"
+    ]
+  }
+]

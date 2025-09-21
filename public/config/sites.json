@@ -1,0 +1,38 @@
+[
+  {
+    "slug": "tuttonews",
+    "title": "TuttoNews",
+    "url": "https://tuttonews.vrabo.it",
+    "description": "Notizie in tempo reale",
+    "logo": "/logos/tuttonews.png",
+    "category": "news",
+    "live": true
+  },
+  {
+    "slug": "lwh",
+    "title": "LiveWorldHelp",
+    "url": "https://lwh.vrabo.it",
+    "description": "Mappa crisi globali",
+    "logo": "/logos/lwh.png",
+    "category": "maps",
+    "live": true
+  },
+  {
+    "slug": "scoutee",
+    "title": "Scoutee",
+    "url": "https://scoutee.vrabo.it",
+    "description": "Scopri e confronta il meglio del web",
+    "logo": "/logos/scoutee.png",
+    "category": "tools",
+    "live": true
+  },
+  {
+    "slug": "nanocakes",
+    "title": "NanoCakes",
+    "url": "https://nanocakes.vrabo.it",
+    "description": "Dolci artigianali",
+    "logo": "/logos/nanocakes.png",
+    "category": "brand",
+    "live": true
+  }
+]
