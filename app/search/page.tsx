@@ -1,9 +1,11 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import Link from "next/link";
-import CarProviders from "@/components/CarProviders";
-import HotelProviders from "@/components/HotelProviders";
-import FlightProviders from "@/components/FlightProviders";
 import { getDeals } from "@/lib/deals";
-
+import dynamic from "next/dynamic";
+const FlightProviders = dynamic(() => import("@/components/FlightProviders").then(m => m.default), { ssr: false });
+const HotelProviders  = dynamic(() => import("@/components/HotelProviders").then(m => m.default), { ssr: false });
+const CarProviders    = dynamic(() => import("@/components/CarProviders").then(m => m.default),  { ssr: false });
 type Params = { [k: string]: string | string[] | undefined };
 
 export default async function SearchPage({ searchParams }: { searchParams: Params }) {
@@ -61,3 +63,4 @@ export default async function SearchPage({ searchParams }: { searchParams: Param
     </main>
   );
 }
+

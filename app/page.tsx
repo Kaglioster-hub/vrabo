@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,14 +10,13 @@ import AirportAutocomplete, { type Option } from "@/components/AirportAutocomple
 import CityAutocomplete, { type CityOpt } from "@/components/CityAutocomplete";
 import { SingleDate, RangeDate } from "@/components/NiceDate";
 import ProviderGrid from "@/components/ProviderGrid";
-import CarProviders from "@/components/CarProviders";
-import HotelProviders from "@/components/HotelProviders";
-import FlightProviders from "@/components/FlightProviders";
-
 import { Airport, displayAirport, TOP_AIRPORTS } from "@/utils/airports";
 import { TELCO_PROVIDERS, FINANCE_PROVIDERS } from "@/config/providers";
 import { saveRecent, loadRecent } from "@/utils/storage";
-
+import dynamic from "next/dynamic";
+const FlightProviders = dynamic(() => import("@/components/FlightProviders").then(m => m.default), { ssr: false });
+const HotelProviders  = dynamic(() => import("@/components/HotelProviders").then(m => m.default), { ssr: false });
+const CarProviders    = dynamic(() => import("@/components/CarProviders").then(m => m.default),  { ssr: false });
 type Mode = "flight" | "stay" | "car" | "telco" | "finance";
 type Recent = { from: string; to: string };
 
@@ -262,4 +263,5 @@ export default function Home() {
     </main>
   );
 }
+
 
