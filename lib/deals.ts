@@ -1,6 +1,5 @@
 import { DEFAULT_DEALS, type Deal } from "@/config/deals";
-
-export async function getDeals(mode: "telco"|"finance"): Promise<Record<string, Deal>> {
+export async function getDeals(mode: "telco"|"finance"|"car"): Promise<Record<string, Deal>> {
   const src = process.env.NEXT_PUBLIC_DEALS_JSON_URL;
   if (src) {
     try {
