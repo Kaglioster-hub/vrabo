@@ -8,7 +8,13 @@ import CountryAutocomplete, { type COpt } from "@/components/CountryAutocomplete
 import { saveRecent, loadRecent } from "@/utils/storage";
 import Link from "next/link";
 import { SingleDate, RangeDate } from "@/components/NiceDate";
-import ProviderGrid from "@/components/ProviderGrid";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";
+import ProviderGrid from "@/components/ProviderGrid";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
 import CarProviders from "@/components/CarProviders";
 import { TELCO_PROVIDERS, FINANCE_PROVIDERS } from "@/config/providers";
 
@@ -241,7 +247,11 @@ import CountryAutocomplete, { type COpt } from "@/components/CountryAutocomplete
 import { saveRecent, loadRecent } from "@/utils/storage";
 import Link from "next/link";
 import { SingleDate, RangeDate } from "@/components/NiceDate";
-import ProviderGrid from "@/components/ProviderGrid";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";
+import ProviderGrid from "@/components/ProviderGrid";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
 import CarProviders from "@/components/CarProviders";
 import HotelProviders from "@/components/HotelProviders";
 import FlightProviders from "@/components/FlightProviders";
@@ -448,7 +458,9 @@ import CountryAutocomplete, { type COpt } from "@/components/CountryAutocomplete
 import { saveRecent, loadRecent } from "@/utils/storage";
 import Link from "next/link";
 import { SingleDate, RangeDate } from "@/components/NiceDate";
-import ProviderGrid from "@/components/ProviderGrid";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";
+import ProviderGrid from "@/components/ProviderGrid";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
 import CarProviders from "@/components/CarProviders";
 import HotelProviders from "@/components/HotelProviders";
 import FlightProviders from "@/components/FlightProviders";
@@ -844,3 +856,4 @@ export default function Home() {
     </main>
   );
 }
+

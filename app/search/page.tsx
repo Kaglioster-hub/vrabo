@@ -1,6 +1,18 @@
 import Link from "next/link";
 import { skyscannerLink, bookingHotelLink, kiwiLink, rentalcarsLink } from "@/utils/affiliates";
-import ProviderGrid from "@/components/ProviderGrid";\nimport CarProviders from "@/components/CarProviders";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";\nimport { getDeals } from "@/lib/deals";\nimport CarProviders from "@/components/CarProviders";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";\nimport { getDeals } from "@/lib/deals";\nimport CarProviders from "@/components/CarProviders";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";\nimport { getDeals } from "@/lib/deals";
+import ProviderGrid from "@/components/ProviderGrid";
+import CarProviders from "@/components/CarProviders";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
+import { getDeals } from "@/lib/deals";
+import CarProviders from "@/components/CarProviders";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
+import { getDeals } from "@/lib/deals";
+import CarProviders from "@/components/CarProviders";
+import HotelProviders from "@/components/HotelProviders";
+import FlightProviders from "@/components/FlightProviders";
+import { getDeals } from "@/lib/deals";
 import { TELCO_PROVIDERS, FINANCE_PROVIDERS } from "@/config/providers";
 import { getDeals } from "@/lib/deals";
 
@@ -69,6 +81,7 @@ export default async function Results({ searchParams }: { searchParams: any }) {
     </main>
   );
 }
+
 
 
 
