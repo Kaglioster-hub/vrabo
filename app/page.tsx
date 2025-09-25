@@ -1,10 +1,9 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import dyn from "next/dynamic";
-const Client = dyn(() => import("./page.client").then(m => m.default), { ssr: false });
-
+import Client from "./page.client";
 export default function Page() {
   return <Client />;
 }
+
 
