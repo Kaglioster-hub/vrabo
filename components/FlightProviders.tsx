@@ -5,14 +5,21 @@ import { type Deal } from "@/config/deals";
 
 type Provider = { key:string; name:string; site:string; desc?:string; logo?:string };
 const FLIGHT_PROVIDERS: Provider[] = [
-  { key:"KAYAK",     name:"KAYAK",     site:"https://www.kayak.com/",      desc:"comparatore" },
-  { key:"MOMONDO",   name:"momondo",   site:"https://www.momondo.com/",    desc:"prezzi storici" },
-  { key:"SKYSCANNER",name:"Skyscanner",site:"https://www.skyscanner.net/", desc:"aggregatore globale" },
-  { key:"EXPEDIA",   name:"Expedia",   site:"https://www.expedia.com/",    desc:"compagnie tradizionali" },
-  { key:"KIWI",      name:"Kiwi.com",  site:"https://www.kiwi.com/",       desc:"ricerca flessibile" },
+  { key:"KAYAK",      name:"KAYAK",      site:"https://www.kayak.com/",       desc:"comparatore" },
+  { key:"MOMONDO",    name:"momondo",    site:"https://www.momondo.com/",     desc:"prezzi storici" },
+  { key:"SKYSCANNER", name:"Skyscanner", site:"https://www.skyscanner.net/",  desc:"aggregatore globale" },
+  { key:"EXPEDIA",    name:"Expedia",    site:"https://www.expedia.com/",     desc:"compagnie tradizionali" },
+  { key:"KIWI",       name:"Kiwi.com",   site:"https://www.kiwi.com/",         desc:"ricerca flessibile" },
 ];
 
-type PreviewItem = { price:number; currency:string; duration:number; stops:number; summary:string; deepLink?:string };
+type PreviewItem = {
+  price:number|null;
+  currency:string;
+  duration:number|null; // minutes
+  stops:number|null;
+  summary:string;
+  deepLink?:string;
+};
 
 export default function FlightProviders({
   from, to, depart, ret, adults=1, deals
@@ -27,20 +34,36 @@ export default function FlightProviders({
     setTop3(null);
     if(ready){
       setLoading(true);
-      const qs = new URLSearchParams({ from: from!, to: to!, depart: depart!, ret: ret||"", adults: String(adults||1) });
-      fetch("/api/flights/preview?"+qs.toString())
+      const qs = new URLSearchParams({
+        from: from || "", to: to || "", depart: depart || "",
+        ret: ret || "", adults: String(adults || 1)
+      });
+      fetch("/api/flights/preview?" + qs.toString())
         .then(r=>r.json())
-        .then(j=>{ if(alive) setTop3(Array.isArray(j?.items)? j.items : []); })
+        .then(j=>{ if(alive) setTop3(Array.isArray(j?.items) ? j.items : []); })
         .catch(()=>{})
         .finally(()=>{ if(alive) setLoading(false); });
     }
     return ()=>{ alive=false };
   },[from,to,depart,ret,adults,ready]);
 
+  const buildOutLink = (prov:string, r:PreviewItem)=>{
+    if (prov==="KIWI" && r.deepLink) return r.deepLink as string;
+    let href = "/api/out?mode=flight";
+    href += "&prov=" + encodeURIComponent(prov);
+    href += "&from=" + encodeURIComponent(from || "");
+    href += "&to=" + encodeURIComponent(to || "");
+    href += "&depart=" + encodeURIComponent(depart || "");
+    href += "&ret=" + encodeURIComponent(ret || "");
+    href += "&adults=" + encodeURIComponent(String(adults || 1));
+    if (r.price!=null)    href += "&hint_price=" + encodeURIComponent(String(r.price));
+    if (r.duration!=null) href += "&hint_dur="   + encodeURIComponent(String(r.duration));
+    if (r.stops!=null)    href += "&hint_stops=" + encodeURIComponent(String(r.stops));
+    return href;
+  };
+
   const ResultRow = ({r, prov}:{r:PreviewItem, prov:string})=>{
-    const href = (prov==="KIWI" && r.deepLink)
-      ? r.deepLink!
-      : \`/api/out?mode=flight&prov=\${prov}&from=\${encodeURIComponent(from||"")}&to=\${encodeURIComponent(to||"")}&depart=\${depart||""}&ret=\${ret||""}&adults=\${adults||1}&hint_price=\${r.price||""}&hint_dur=\${r.duration||""}&hint_stops=\${r.stops||""}\`;
+    const href = buildOutLink(prov, r);
     return (
       <a href={href} target="_blank" rel="nofollow"
          className="flex justify-between items-center px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
@@ -68,9 +91,7 @@ export default function FlightProviders({
             {ready && (
               <div className="mt-2 flex flex-col gap-2">
                 {loading && <div className="text-sm text-white/60">Caricamento migliori opzioni…</div>}
-                {!loading && top3 && top3.length>0 && top3.map((r, i)=>(
-                  <ResultRow key={i} r={r} prov={p.key}/>
-                ))}
+                {!loading && top3 && top3.length>0 && top3.map((r, i)=>(<ResultRow key={i} r={r} prov={p.key}/>))}
                 {!loading && top3 && top3.length===0 && (
                   <div className="text-sm text-white/60">Nessuna anteprima disponibile.</div>
                 )}
