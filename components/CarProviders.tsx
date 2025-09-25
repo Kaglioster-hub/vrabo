@@ -1,39 +1,44 @@
 "use client";
+import { CAR_PROVIDERS, type CarProvider } from "@/utils/carAffiliates";
+import { carLink } from "@/utils/carAffiliates";
+import { type Deal } from "@/config/deals";
 import { bestLogoFor, fallbackLogo } from "@/utils/logo";
 
-type CarProvider = { key:string; name:string; site:string; desc?:string; logo?:string };
-const CAR: CarProvider[] = [
-  { key:"RENTALCARS",     name:"Rentalcars",     site:"https://www.rentalcars.com/",     desc:"confronta le principali compagnie" },
-  { key:"DISCOVERCARS",   name:"DiscoverCars",   site:"https://www.discovercars.com/",   desc:"offerte globali" },
-  { key:"QEEQ",           name:"QEEQ",           site:"https://www.qeeq.com/",           desc:"prezzi competitivi" },
-  { key:"ECONOMYBOOKINGS",name:"EconomyBookings",site:"https://www.economybookings.com/",desc:"ampia copertura" },
-  { key:"AUTOEUROPE",     name:"AutoEurope",     site:"https://www.autoeurope.eu/",      desc:"servizio clienti top" },
-  { key:"HERTZ",          name:"Hertz",          site:"https://www.hertz.com/",          desc:"rete mondiale" },
-  { key:"AVIS",           name:"Avis",           site:"https://www.avis.com/",           desc:"offerte weekend" },
-  { key:"EUROPCAR",       name:"Europcar",       site:"https://www.europcar.com/",       desc:"diffusa in EU" },
-];
+function Pill({href,children}:{href:string;children:React.ReactNode}) {
+  return <a className="inline-flex items-center rounded-xl border border-white/10 px-3 py-1 text-sm hover:bg-white/10"
+           href={href} target="_blank" rel="nofollow">{children}</a>;
+}
 
-export default function CarProviders({ city, pickup, dropoff }:{
-  city?: string; pickup?: string; dropoff?: string;
+export default function CarProviders({ city, pickup, dropoff, deals }:{
+  city?: string; pickup?: string; dropoff?: string; deals: Record<string, Deal>;
 }) {
   const ready = !!(city && pickup && dropoff);
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {CAR.map(p=>{
+    <div className="mt-4 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {CAR_PROVIDERS.map(p=>{
+        const d = deals[p.key] || {};
         const src = bestLogoFor(p.site, p.logo);
-        const href = `/api/out?mode=car&prov=${p.key}&city=${encodeURIComponent(city||"")}&pickup=${pickup||""}&dropoff=${dropoff||""}`;
+        const mk = (sort:"cheap"|"best"|"supplier") =>
+          `/api/out?mode=car&prov=${p.key}&city=${encodeURIComponent(city||"")}&pickup=${pickup||""}&dropoff=${dropoff||""}&sort=${sort}`;
         return (
           <div key={p.key} className="card p-4 flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <img src={src} alt={p.name} className="h-8 w-8 rounded" onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = fallbackLogo(p.site); }}/>
+              <img src={src} alt={p.name} className="h-8 w-8 rounded" onError={(e)=>{ (e.currentTarget as HTMLImageElement).src=fallbackLogo(p.site); }}/>
               <div className="font-semibold">{p.name}</div>
             </div>
             {p.desc && <div className="text-sm text-white/70">{p.desc}</div>}
-            <div className="mt-2">
-              <a className={"btn "+(ready?"btn-primary":"")} href={href} onClick={(e)=>{ if(!ready) e.preventDefault(); }}>
-                {ready ? "Cerca auto" : "Inserisci destinazione e date"}
-              </a>
+            {(d.code || d.note) && (
+              <div className="text-sm">
+                {d.code && <span className="inline-flex items-center px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 mr-2">Coupon: <b className="ml-1">{d.code}</b></span>}
+                {d.note && <span className="inline-flex items-center px-2 py-1 rounded-lg bg-white/10">{d.note}</span>}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2 mt-1">
+              <Pill href={mk("cheap")}>Prezzo</Pill>
+              <Pill href={mk("best")}>Consigliati</Pill>
+              <Pill href={mk("supplier")}>Fornitore</Pill>
             </div>
+            {!ready && <div className="text-xs text-white/60">Seleziona luogo e date.</div>}
           </div>
         );
       })}
