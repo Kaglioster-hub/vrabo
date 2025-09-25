@@ -9,6 +9,7 @@ import { saveRecent, loadRecent } from "@/utils/storage";
 import Link from "next/link";
 import { SingleDate, RangeDate } from "@/components/NiceDate";
 import ProviderGrid from "@/components/ProviderGrid";
+import CarProviders from "@/components/CarProviders";
 import { TELCO_PROVIDERS, FINANCE_PROVIDERS } from "@/config/providers";
 
 type Recent = { from: string; to: string };
@@ -20,6 +21,7 @@ const COUNTRIES = ["Italia","Spagna","Francia","Germania","USA","Regno Unito","T
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("flight");
+
   // voli
   const [from, setFrom] = useState<Option | null>(null);
   const [to, setTo] = useState<Option | null>(null);
@@ -29,12 +31,15 @@ export default function Home() {
   const [adults, setAdults] = useState(1);
   const [initialList, setInitialList] = useState<Airport[]>([]);
   const [recents, setRecents] = useState<Recent[]>([]);
-  // telco/finance
+
+  // stay
+  const [cityTo, setCityTo] = useState<CityOpt|null>(null);
+
+  // telco/finance/car deals
   const [country, setCountry] = useState<COpt|null>(null);
   const [dealsTelco, setDealsTelco] = useState<Record<string, any>>({});
   const [dealsFin, setDealsFin] = useState<Record<string, any>>({});
-  // stay city
-  const [cityTo, setCityTo] = useState<CityOpt|null>(null);
+  const [dealsCar, setDealsCar] = useState<Record<string, any>>({});
 
   useEffect(() => {
     (async () => {
@@ -44,6 +49,7 @@ export default function Home() {
     setRecents(loadRecent<Recent>("vrabo.recents", []));
     fetch("/api/deals?mode=telco").then(r=>r.json()).then(d=>setDealsTelco(d.deals||{}));
     fetch("/api/deals?mode=finance").then(r=>r.json()).then(d=>setDealsFin(d.deals||{}));
+    fetch("/api/deals?mode=car").then(r=>r.json()).then(d=>setDealsCar(d.deals||{}));
   }, []);
 
   function swap(){ const a = from; const b = to; setFrom(b); setTo(a); }
@@ -106,17 +112,14 @@ export default function Home() {
                 <AirportAutocomplete name="from" placeholder="Cerca aeroporto o città..." value={from} onChange={setFrom} onQuery={()=>{}} initialList={initialList} />
                 <button className="btn" title="Aeroporto più vicino" onClick={useNearest}><LocateFixed size={16}/></button>
               </div>
-
               <label className="text-sm text-white/70">A</label>
               <div className="flex gap-2 items-center">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10"><PlaneLanding size={18}/></span>
                 <AirportAutocomplete name="to" placeholder="Cerca aeroporto o città..." value={to} onChange={setTo} onQuery={()=>{}} initialList={initialList} />
                 <button className="btn" title="Inverti" onClick={swap}><Shuffle size={16}/></button>
               </div>
-
               <Suggest/>
             </div>
-
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm text-white/70">Andata</label>
@@ -163,6 +166,9 @@ export default function Home() {
               <label className="text-sm text-white/70">Ritiro / Riconsegna</label>
               <RangeDate startDate={depart} endDate={ret} onChange={(r:any)=>{ const [a,b]=r as [Date|null,Date|null]; setDepart(a); setRet(b); }} placeholderText="seleziona intervallo" />
             </div>
+            <div className="md:col-span-2 pt-2">
+              <CarProviders city={(to as any)?.value} pickup={depart?.toISOString().slice(0,10)} dropoff={ret?.toISOString().slice(0,10)} deals={dealsCar}/>
+            </div>
           </div>
         )}
 
@@ -180,20 +186,15 @@ export default function Home() {
               <Link href={country ? `/search?mode=telco&country=${encodeURIComponent(country.value)}` : "#"} className={"btn btn-primary" + (country?"":" pointer-events-none opacity-50")}><Search size={16}/> Vedi offerte eSIM</Link>
               {!country && <span className="text-sm text-white/60">Scegli un Paese per filtrare.</span>}
             </div>
-            <div className="pt-2">
-              <ProviderGrid items={TELCO_PROVIDERS} deals={dealsTelco}/>
-            </div>
+            <div className="pt-2"><ProviderGrid items={TELCO_PROVIDERS} deals={dealsTelco}/></div>
           </div>
         )}
 
         {/* FINANZA */}
         {mode==="finance" && (
-          <div className="mt-6">
-            <ProviderGrid items={FINANCE_PROVIDERS} deals={dealsFin}/>
-          </div>
+          <div className="mt-6"><ProviderGrid items={FINANCE_PROVIDERS} deals={dealsFin}/></div>
         )}
 
-        {/* CTA per voli/stay/car */}
         {(mode==="flight" || mode==="stay" || mode==="car") && (
           <div className="mt-6 flex flex-wrap gap-3 items-center">
             <Link href={searchHref} onClick={commitRecent} className={"btn btn-primary text-base px-5 py-3" + ((mode==="flight"&&canSearchFlight)||(mode==="stay"&&canSearchStay)||(mode==="car"&&canSearchCar) ? "" : " pointer-events-none opacity-50")}>

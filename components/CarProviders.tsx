@@ -1,9 +1,8 @@
 "use client";
-import { CAR_PROVIDERS, type CarProvider } from "@/utils/carAffiliates";
+import { CAR_PROVIDERS } from "@/utils/carAffiliates";
 import { carLink } from "@/utils/carAffiliates";
 import { type Deal } from "@/config/deals";
 import { bestLogoFor, fallbackLogo } from "@/utils/logo";
-
 export default function CarProviders({ city, pickup, dropoff, deals }:{
   city?: string; pickup?: string; dropoff?: string; deals: Record<string, Deal>;
 }) {
@@ -17,7 +16,8 @@ export default function CarProviders({ city, pickup, dropoff, deals }:{
         return (
           <div key={p.key} className="card p-4 flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <img src={src} alt={p.name} className="h-8 w-8 rounded" onError={(e)=>{ (e.currentTarget as HTMLImageElement).src=fallbackLogo(p.site); }}/>
+              <img src={src} alt={p.name} className="h-8 w-8 rounded"
+                   onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = fallbackLogo(p.site); }}/>
               <div className="font-semibold">{p.name}</div>
             </div>
             {p.desc && <div className="text-sm text-white/70">{p.desc}</div>}
