@@ -1,35 +1,35 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "VRABO", template: "%s | VRABO" },
-  description: "Il comparatore dei comparatori. Non sceglie per te, sceglie con te.",
-  applicationName: "VRABO",
-  themeColor: "#0b0c0e",
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
-  icons: { icon: "/favicon.png" },
-  openGraph: {
-    title: "VRABO",
-    description: "Il comparatore dei comparatori. Non sceglie per te, sceglie con te.",
-    siteName: "VRABO",
-    type: "website",
-    locale: "it_IT"
-  }
+  title: process.env.NEXT_PUBLIC_SITE_NAME || "VRABO",
+  description: "VRABO – the comparator of comparators. Flights, hotels, cars. Faster, smarter, global.",
+  icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export default function RootLayout({ children }:{ children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="it" className="scroll-smooth">
-      <body className={inter.className}>
-        <a href="#content" className="visually-hidden focus:not-sr-only">Salta al contenuto</a>
-        <Header />
-        <main id="content" className="section">{children}</main>
-        <Footer />
+    <html lang="it">
+      <body className="min-h-screen antialiased">
+        <div className="container-max py-6">
+          <header className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <img src="/logo.svg" alt="VRABO" className="h-10 w-10" />
+              <span className="text-lg font-semibold tracking-wide">VRABO</span>
+            </div>
+            <nav className="text-sm text-white/70">
+              <a href="/legal" className="hover:text-white">Legal</a>
+            </nav>
+          </header>
+          {children}
+          <footer className="mt-12 text-center text-xs text-white/50">
+            © {new Date().getFullYear()} VRABO — Comparator of Comparators. 
+            <br/>
+            <span className="opacity-80">
+            Affiliate links may reward us. Prices & availability are provided by partners. Always verify details on their sites.
+            </span>
+          </footer>
+        </div>
       </body>
     </html>
   );
