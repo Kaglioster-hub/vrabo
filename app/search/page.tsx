@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { skyscannerLink, bookingHotelLink, kiwiLink, rentalcarsLink } from "@/utils/affiliates";
-import ProviderGrid from "@/components/ProviderGrid";
+import ProviderGrid from "@/components/ProviderGrid";\nimport CarProviders from "@/components/CarProviders";\nimport HotelProviders from "@/components/HotelProviders";\nimport FlightProviders from "@/components/FlightProviders";\nimport { getDeals } from "@/lib/deals";
 import { TELCO_PROVIDERS, FINANCE_PROVIDERS } from "@/config/providers";
 import { getDeals } from "@/lib/deals";
 
@@ -28,13 +28,9 @@ export default async function Results({ searchParams }: { searchParams: any }) {
       { name: "Skyscanner (voli)", href: skyscannerLink(trip) },
       { name: "Kiwi.com (voli)", href: kiwiLink(trip) },
     ];
-  } else if (mode === "stay") {
-    links = [
-      { name: "Booking.com (hotel)", href: bookingHotelLink(cityTo, depart, ret || depart, Math.max(adults,1)) },
+  } else if (mode === "stay") { const deals = await getDeals("stay"); links = []; grid = (<><div className="mb-4 text-white/70 text-sm">Hotel consigliati</div><HotelProviders city={to} checkin={depart} checkout={ret} adults={adults || 1} deals={deals}/></>);},
     ];
-  } else if (mode === "car") {
-    links = [
-      { name: "Rentalcars (auto)", href: rentalcarsLink(cityTo, depart, ret || depart) },
+  } else if (mode === "car") { const deals = await getDeals("car"); links = []; grid = (<><div className="mb-4 text-white/70 text-sm">Partner consigliati</div><CarProviders city={to} pickup={depart} dropoff={ret || depart} deals={deals}/></>);},
     ];
   } else if (mode === "telco") {
     const deals = await getDeals("telco");
@@ -73,3 +69,4 @@ export default async function Results({ searchParams }: { searchParams: any }) {
     </main>
   );
 }
+
