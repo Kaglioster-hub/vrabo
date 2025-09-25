@@ -1,17 +1,24 @@
 "use client";
-import { FLIGHT_PROVIDERS } from "@/utils/flightAffiliates";
-import { flightLink } from "@/utils/flightAffiliates";
-import { type Deal } from "@/config/deals";
 import { bestLogoFor, fallbackLogo } from "@/utils/logo";
-export default function FlightProviders({ from, to, depart, ret, adults, deals }:{
-  from?: string; to?: string; depart?: string; ret?: string; adults?: number; deals: Record<string, Deal>;
+
+type P = { key:string; name:string; site:string; desc?:string; logo?:string };
+const FLIGHTS: P[] = [
+  { key:"SKYSCANNER", name:"Skyscanner", site:"https://www.skyscanner.com/", desc:"aggregatore globale" },
+  { key:"KIWI",       name:"Kiwi.com",   site:"https://www.kiwi.com/",       desc:"ricerca flessibile" },
+  { key:"KAYAK",      name:"KAYAK",      site:"https://www.kayak.com/",      desc:"comparatore" },
+  { key:"MOMONDO",    name:"momondo",    site:"https://www.momondo.com/",    desc:"prezzi storici" },
+  { key:"TRIP",       name:"Trip.com",   site:"https://us.trip.com/",        desc:"voli + hotel" },
+  { key:"EXPEDIA",    name:"Expedia",    site:"https://www.expedia.com/",    desc:"compagnie tradizionali" },
+];
+
+export default function FlightProviders({ from, to, depart, ret, adults=1 }:{
+  from?:string; to?:string; depart?:string; ret?:string; adults?:number;
 }) {
   const ready = !!(from && to && depart);
   return (
-    <div className="mt-4 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {FLIGHT_PROVIDERS.map(p=>{
-        const d = deals[p.key] || {};
-        const href = d.url || flightLink(p, from, to, depart, ret, adults);
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {FLIGHTS.map(p=>{
+        const href = `/api/out?mode=flight&prov=${p.key}&from=${from||""}&to=${to||""}&depart=${depart||""}&ret=${ret||""}&adults=${adults||1}`;
         const src = bestLogoFor(p.site, p.logo);
         return (
           <div key={p.key} className="card p-4 flex flex-col gap-3">
@@ -20,16 +27,9 @@ export default function FlightProviders({ from, to, depart, ret, adults, deals }
               <div className="font-semibold">{p.name}</div>
             </div>
             {p.desc && <div className="text-sm text-white/70">{p.desc}</div>}
-            {(d.code || d.note) && (
-              <div className="text-sm">
-                {d.code && <span className="inline-flex items-center px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 mr-2">Coupon: <b className="ml-1">{d.code}</b></span>}
-                {d.note &&  <span className="inline-flex items-center px-2 py-1 rounded-lg bg-white/10">{d.note}</span>}
-              </div>
-            )}
-            {d.expires && <div className="text-xs text-white/60">Scade: {d.expires}</div>}
             <div className="mt-2">
-              <a className={"btn " + (ready ? "btn-primary" : "")} href={href} target="_blank" rel="nofollow">
-                {ready ? "Cerca voli" : "Vai all'offerta"}
+              <a className={"btn "+(ready?"btn-primary":"")} href={href} onClick={(e)=>{ if(!ready) e.preventDefault(); }}>
+                {ready ? "Cerca voli" : "Inserisci percorso e data"}
               </a>
             </div>
           </div>
