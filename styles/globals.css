@@ -41,3 +41,11 @@ html, body {
 .input{height:44px;font-size:14.5px}
 .btn{height:42px}
 @media (max-width:640px){.h1-grad{font-size:1.6rem}.btn{width:100%;justify-content:center}.input{height:48px}}
+/* react-datepicker dark */
+.react-datepicker{background:#0b0b0c; border:1px solid rgba(255,255,255,.1); border-radius:12px; overflow:hidden; color:#fff}
+.react-datepicker__header{background:#0b0b0c; border-bottom:1px solid rgba(255,255,255,.1)}
+.react-datepicker__current-month,.react-datepicker-time__header{color:#fff; font-weight:600}
+.react-datepicker__day-name,.react-datepicker__day{color:rgba(255,255,255,.8)}
+.react-datepicker__day--selected,.react-datepicker__day--keyboard-selected{background:#facc15; color:#111}
+.react-datepicker__day--today{border:1px solid rgba(250,204,21,.6)}
+.react-datepicker__month-container{padding:6px}
