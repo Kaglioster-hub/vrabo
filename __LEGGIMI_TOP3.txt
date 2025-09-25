@@ -1,0 +1,35 @@
+----------------------------------------------------------------
+📌 Inserisci a mano in app/page.tsx (tab "Voli"):
+----------------------------------------------------------------
+1) Import:
+   import Top3Strip from "@/components/Top3Strip";
+   import FlightProviders from "@/components/FlightProviders";
+
+2) Stato per top3 (solo dentro il ramo flight):
+   const [top3, setTop3] = useState<any>(null);
+
+3) Dentro il layout della tab "Voli", subito sotto la barra di ricerca,
+   mostra la barra anteprima:
+   {from?.value && to?.value && depart && (
+     <Top3Strip
+       from={(from as any)?.value} to={(to as any)?.value}
+       depart={depart?.toISOString().slice(0,10)}
+       ret={ret ? ret.toISOString().slice(0,10) : undefined}
+       adults={adults||1}
+     />
+   )}
+
+4) Quando renderizzi la griglia partner:
+   <FlightProviders
+     from={(from as any)?.value} to={(to as any)?.value}
+     depart={depart?.toISOString().slice(0,10)}
+     ret={ret ? ret.toISOString().slice(0,10) : undefined}
+     adults={adults||1}
+     deals={(window as any).__flightDeals || {}}
+     top3={(window as any).__vraboTop3 || null}
+   />
+
+5) (opzionale) Puoi salvare la risposta della barra in window per riusarla:
+   nel componente Top3Strip, dopo setTop3(data), fai anche:
+   (window as any).__vraboTop3 = data
+----------------------------------------------------------------
