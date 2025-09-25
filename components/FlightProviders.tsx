@@ -1,59 +1,76 @@
 "use client";
+import { useEffect, useState } from "react";
 import { bestLogoFor, fallbackLogo } from "@/utils/logo";
-import { Deal } from "@/config/deals";
-type Provider = { key:string; name:string; site:string; desc?:string; logo?:string; enabled?:boolean };
+import { type Deal } from "@/config/deals";
+
+type Provider = { key:string; name:string; site:string; desc?:string; logo?:string };
 const FLIGHTS: Provider[] = [
-  { key:"KAYAK",     name:"KAYAK",     site:"https://www.kayak.com/",      desc:"comparatore",          enabled:true },
-  { key:"MOMONDO",   name:"momondo",   site:"https://www.momondo.com/",    desc:"prezzi storici",       enabled:true },
-  { key:"SKYSCANNER",name:"Skyscanner",site:"https://www.skyscanner.net/", desc:"aggregatore globale",  enabled:true },
-  { key:"EXPEDIA",   name:"Expedia",   site:"https://www.expedia.com/",    desc:"compagnie tradizionali", enabled:true },
+  { key:"KAYAK",     name:"KAYAK",     site:"https://www.kayak.com/",     desc:"comparatore" },
+  { key:"MOMONDO",   name:"momondo",   site:"https://www.momondo.com/",   desc:"prezzi storici" },
+  { key:"SKYSCANNER",name:"Skyscanner",site:"https://www.skyscanner.net/",desc:"aggregatore globale" },
+  { key:"EXPEDIA",   name:"Expedia",   site:"https://www.expedia.com/",   desc:"compagnie tradizionali" },
+  { key:"KIWI",      name:"Kiwi.com",  site:"https://www.kiwi.com/",      desc:"ricerca flessibile" },
 ];
 
-type Offer = { label:"cheap"|"best"|"fast"; price:number; currency:string; carriers:string[]; stops:number; duration:string; dep:string; arr:string; deepLink:string; };
-type Top3 = { cheapest?:Offer; fastest?:Offer; best?:Offer };
-const label = (l:Offer["label"]) => l==="cheap"?"Economico":l==="fast"?"Veloce":"Migliore";
-const sortKey = (l:Offer["label"])=> l==="cheap"?"cheap":(l==="fast"?"fast":"best");
+type Picks = null | { cheap?:Meta; best?:Meta; fast?:Meta };
+type Meta = { price:number; currency:string; durationMin:number; airline:string; flight_no:string; deep_link?:string; summary:string };
 
-export default function FlightProviders({ from, to, depart, ret, adults=1, deals, top3 }:{
-  from?:string; to?:string; depart?:string; ret?:string; adults?:number; deals:Record<string,Deal>; top3?:Top3|null;
-}){
+export default function FlightProviders({ from, to, depart, ret, adults=1, deals }:{
+  from?: string; to?: string; depart?: string; ret?: string; adults?: number; deals: Record<string, Deal>;
+}) {
   const ready = !!(from && to && depart);
-  const rows: Offer[] = [];
-  if(top3?.cheapest) rows.push(top3.cheapest);
-  if(top3?.best)     rows.push(top3.best);
-  if(top3?.fastest)  rows.push(top3.fastest);
+  const [picks, setPicks] = useState<Picks>(null);
+  useEffect(()=>{
+    let alive=true;
+    if(ready){
+      const q = new URLSearchParams({ from:from!, to:to!, depart:depart!, ret:ret||"", adults:String(adults||1) });
+      fetch(`/api/flights/preview?`+q.toString()).then(r=>r.json()).then(d=>{ if(alive) setPicks(d?.picks||null); }).catch(()=>{});
+    } else setPicks(null);
+    return ()=>{ alive=false; };
+  },[from,to,depart,ret,adults,ready]);
+
+  const fmtPrice = (n:number|undefined, cur?:string)=> n==null ? "" : `${n.toLocaleString("it-IT")} ${cur||"€"}`;
+  const fmtDur = (m:number|undefined)=> m==null ? "" : (m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`);
+
+  function deeplinkFor(prov:string, m?:Meta){
+    // se è Kiwi ed abbiamo il deep_link → passa da /api/out con override ?dl=
+    if(prov==="KIWI" && m?.deep_link) return `/api/out?mode=flight&prov=KIWI&dl=${encodeURIComponent(m.deep_link)}`;
+    // altrimenti ricerca base dello stesso viaggio
+    const q = new URLSearchParams({ prov, mode:"flight", from:from||"", to:to||"", depart:depart||"", ret:ret||"", adults:String(adults||1) });
+    return `/api/out?${q.toString()}`;
+  }
+
+  const chips = (prov:string)=>(
+    <div className="flex flex-wrap gap-2">
+      {picks?.cheap && <a className="btn btn-primary" href={deeplinkFor(prov, picks.cheap)} target="_blank" rel="nofollow">Economico · {fmtPrice(picks.cheap.price, picks.cheap.currency)} · {fmtDur(picks.cheap.durationMin)}</a>}
+      {picks?.best  && <a className="btn btn-primary" href={deeplinkFor(prov, picks.best)}  target="_blank" rel="nofollow">Migliore · {fmtPrice(picks.best.price, picks.best.currency)} · {fmtDur(picks.best.durationMin)}</a>}
+      {picks?.fast  && <a className="btn btn-primary" href={deeplinkFor(prov, picks.fast)}  target="_blank" rel="nofollow">Veloce · {fmtPrice(picks.fast.durationMin)} · {fmtPrice(picks.fast.price, picks.fast.currency)}</a>}
+    </div>
+  );
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {FLIGHTS.filter(p=>p.enabled!==false).map(p=>{
+      {FLIGHTS.map(p=>{
+        const d = deals[p.key] || {};
         const src = bestLogoFor(p.site, p.logo);
-        const base = `/api/out?mode=flight&prov=${p.key}&from=${from||""}&to=${to||""}&depart=${depart||""}&ret=${ret||""}&adults=${adults||1}`;
-        const prov = (s:string)=> `${base}&sort=${s}`;
         return (
           <div key={p.key} className="card p-4 flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <a href={ready?prov("best"):"#"} onClick={(e)=>{ if(!ready) e.preventDefault(); }}>
+              <a href={`/api/out?mode=flight&prov=${p.key}${ready?`&from=${from}&to=${to}&depart=${depart}${ret?`&ret=${ret}`:""}&adults=${adults||1}`:""}`} target="_blank" rel="nofollow">
                 <img src={src} alt={p.name} className="h-8 w-8 rounded" onError={(e)=>{ (e.currentTarget as HTMLImageElement).src=fallbackLogo(p.site); }}/>
               </a>
               <div className="font-semibold">{p.name}</div>
             </div>
+
             {p.desc && <div className="text-sm text-white/70">{p.desc}</div>}
-            {!ready && <div className="text-xs text-white/50">Compila tratta e date.</div>}
-            {ready && rows.length>0 && (
-              <div className="mt-1 flex flex-col gap-2">
-                {rows.map(o=>(
-                  <div key={o.label} className="rounded-lg border border-white/10 p-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="font-medium">{label(o.label)}</div>
-                      <div className="font-semibold">{o.price} {o.currency}</div>
-                    </div>
-                    <div className="text-xs text-white/70">{o.carriers.join(" + ")} · {o.stops===0?"diretto":`${o.stops} scali`} · {o.duration}</div>
-                    <div className="mt-1 flex gap-2">
-                      <a className="btn btn-primary" href={o.deepLink} target="_blank" rel="nofollow">Prenota</a>
-                      <a className="btn" href={prov(sortKey(o.label))} target="_blank" rel="nofollow">Apri su {p.name}</a>
-                    </div>
-                  </div>
-                ))}
+
+            {!ready && <div className="text-sm text-white/50">Compila tratta e date.</div>}
+            {ready && chips(p.key)}
+
+            {(d.code || d.note) && (
+              <div className="text-xs">
+                {d.code && <span className="inline-flex items-center px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 mr-2">Coupon: <b className="ml-1">{d.code}</b></span>}
+                {d.note &&  <span className="inline-flex items-center px-2 py-1 rounded-lg bg-white/10">{d.note}</span>}
               </div>
             )}
           </div>
