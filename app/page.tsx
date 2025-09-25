@@ -1,17 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { PlaneTakeoff, PlaneLanding, Search, Users, Shuffle, LocateFixed, X, BedDouble, Car, Phone, CreditCard } from "lucide-react";
 import { Airport, displayAirport, TOP_AIRPORTS } from "@/utils/airports";
 import AirportAutocomplete, { type Option } from "@/components/AirportAutocomplete";
 import { saveRecent, loadRecent } from "@/utils/storage";
 import Link from "next/link";
-import { it } from "date-fns/locale";
-
-const DatePicker: any = dynamic(() => import("react-datepicker"), { ssr: false });
+import { SingleDate, RangeDate } from "@/components/NiceDate";
 
 type Recent = { from: string; to: string };
 type Mode = "flight" | "stay" | "car" | "telco" | "finance";
+
+const CITIES = ["Roma","Milano","Parigi","Barcellona","Londra","New York","Dubai","Istanbul","Tokyo","Bangkok","Berlino","Amsterdam"];
+const CAR_PLACES = ["FCO","MXP","LIN","LHR","CDG","BCN","MAD","JFK","LAX","FRA","MUC","ATH","NCE","PMI","AGP","CAG","CTA"];
+const COUNTRIES = ["Italia","Spagna","Francia","Germania","USA","Regno Unito","Turchia","Grecia","Thailandia","Giappone"];
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("flight");
@@ -53,12 +54,12 @@ export default function Home() {
   const canSearchStay   = mode==="stay"   && to?.value && depart && ret;
   const canSearchCar    = mode==="car"    && to?.value && depart && ret;
 
-  const queryCommon = `from=${from?.value||""}&to=${to?.value||""}&depart=${depart?.toISOString().slice(0,10)||""}${ret? "&return="+ret.toISOString().slice(0,10):""}&adults=${adults}`;
+  const qCommon = `from=${from?.value||""}&to=${to?.value||""}&depart=${depart?.toISOString().slice(0,10)||""}${ret? "&return="+ret.toISOString().slice(0,10):""}&adults=${adults}`;
   const searchHref =
-    mode==="flight" ? (canSearchFlight ? `/search?mode=flight&${queryCommon}${oneWay? "&oneway=1":""}` : "#") :
-    mode==="stay"   ? (canSearchStay   ? `/search?mode=stay&${queryCommon}` : "#") :
-    mode==="car"    ? (canSearchCar    ? `/search?mode=car&${queryCommon}` : "#") :
-                      `/search?mode=${mode}&${queryCommon}`;
+    mode==="flight" ? (canSearchFlight ? `/search?mode=flight&${qCommon}${oneWay? "&oneway=1":""}` : "#") :
+    mode==="stay"   ? (canSearchStay   ? `/search?mode=stay&${qCommon}` : "#") :
+    mode==="car"    ? (canSearchCar    ? `/search?mode=car&${qCommon}` : "#") :
+                      `/search?mode=${mode}&${qCommon}`;
 
   function commitRecent(){ if (from?.value && to?.value) { const r = { from: from.value, to: to.value }; saveRecent("vrabo.recents", r, 6); setRecents(loadRecent<Recent>("vrabo.recents", [])); } }
 
@@ -66,8 +67,18 @@ export default function Home() {
     <button onClick={()=>setMode(k)} className={"btn " + (mode===k? "btn-primary":"")} title={label}><Icon size={16}/><span className="hidden sm:inline">{label}</span></button>
   );
 
+  const Suggest = () => (
+    <div className="text-xs text-white/60">
+      {mode==="flight" && <>Suggerimenti:&nbsp;{TOP_AIRPORTS.map(a=> <button key={a} onClick={()=>!from?setFrom({label:a,value:a}):setTo({label:a,value:a})} className="mx-1 underline hover:text-white">{a}</button>)}</>}
+      {mode==="stay" && <>Città popolari:&nbsp;{CITIES.map(c=> <button key={c} onClick={()=>setTo({label:c,value:c})} className="mx-1 underline hover:text-white">{c}</button>)}</>}
+      {mode==="car" && <>Luoghi comuni:&nbsp;{CAR_PLACES.map(c=> <button key={c} onClick={()=>setTo({label:c,value:c})} className="mx-1 underline hover:text-white">{c}</button>)}</>}
+      {mode==="telco" && <>Paesi eSIM:&nbsp;{COUNTRIES.map(c=> <button key={c} onClick={()=>setTo({label:c,value:c})} className="mx-1 underline hover:text-white">{c}</button>)}</>}
+    </div>
+  );
+
   return (
     <main className="space-y-6">
+      <div id="vrabo-portal" /> {/* portal per i popup del datepicker */}
       <section className="card p-6">
         <div className="flex flex-wrap gap-2 mb-4">
           <Tab k="flight" label="Voli"        Icon={PlaneTakeoff}/>
@@ -80,7 +91,6 @@ export default function Home() {
         <h1 className="h1-grad">VRABO — Comparator of Comparators.</h1>
         <p className="text-white/70 mt-2">Trova voli, hotel, auto, telefonia e servizi finanziari nel mondo.</p>
 
-        {/* FORM */}
         {mode==="flight" && (
           <div className="grid md:grid-cols-[1fr_1fr] gap-4 mt-6">
             <div className="space-y-3">
@@ -98,12 +108,7 @@ export default function Home() {
                 <button className="btn" title="Inverti" onClick={swap}><Shuffle size={16}/></button>
               </div>
 
-              <div className="text-xs text-white/60">
-                Suggerimenti:&nbsp;
-                {TOP_AIRPORTS.map(a => (
-                  <button key={a} onClick={()=>!from ? setFrom({label:a, value:a}) : setTo({label:a, value:a})} className="mx-1 underline hover:text-white">{a}</button>
-                ))}
-              </div>
+              <Suggest/>
             </div>
 
             <div className="space-y-3">
@@ -114,9 +119,8 @@ export default function Home() {
                   Solo andata
                 </label>
               </div>
-              <DatePicker selected={depart} onChange={setDepart} locale={it} calendarStartDay={1} showMonthDropdown showYearDropdown dropdownMode="select" showPopperArrow={false} minDate={new Date()} className="input w-full" dateFormat="dd/MM/yyyy" placeholderText="seleziona data" />
-              {!oneWay && (<><label className="text-sm text-white/70">Ritorno (opz.)</label>
-                <DatePicker selected={ret} onChange={setRet} locale={it} calendarStartDay={1} showMonthDropdown showYearDropdown dropdownMode="select" showPopperArrow={false} minDate={depart || new Date()} className="input w-full" dateFormat="dd/MM/yyyy" placeholderText="opzionale" /></>)}
+              <SingleDate selected={depart} onChange={setDepart as any} minDate={new Date()} placeholderText="seleziona data" />
+              {!oneWay && (<><label className="text-sm text-white/70">Ritorno (opz.)</label><SingleDate selected={ret} onChange={setRet as any} minDate={depart || new Date()} placeholderText="opzionale" /></>)}
               <label className="text-sm text-white/70">Adulti</label>
               <div className="flex items-center gap-2">
                 <Users size={18} className="opacity-70"/>
@@ -129,15 +133,15 @@ export default function Home() {
         {mode!=="flight" && (
           <div className="grid md:grid-cols-[1fr_1fr] gap-4 mt-6">
             <div className="space-y-3">
-              <label className="text-sm text-white/70">{mode==="stay" ? "Destinazione" : "Luogo ritiro"}</label>
-              <AirportAutocomplete name="to" placeholder="Cerca città o aeroporto..." value={to} onChange={setTo} onQuery={onQuery} initialList={initialList} />
+              <label className="text-sm text-white/70">{mode==="stay" ? "Destinazione" : "Luogo"}</label>
+              <AirportAutocomplete name="to" placeholder={mode==="stay" ? "Dove vuoi dormire?" : mode==="car" ? "Città o aeroporto di ritiro" : "Paese/luogo"} value={to} onChange={setTo} onQuery={onQuery} initialList={initialList} />
+              <Suggest/>
             </div>
             <div className="space-y-3">
-              <label className="text-sm text-white/70">{mode==="stay" ? "Check-in / Check-out" : "Ritiro / Riconsegna"}</label>
-              <DatePicker
-                selected={depart} onChange={(d:any)=>setDepart(d)} startDate={depart} endDate={ret} selectsRange
-                locale={it} calendarStartDay={1} showPopperArrow={false} monthsShown={2}
-                className="input w-full" dateFormat="dd/MM/yyyy" placeholderText="seleziona intervallo" />
+              {(mode==="stay" || mode==="car") && (<>
+                <label className="text-sm text-white/70">{mode==="stay" ? "Check-in / Check-out" : "Ritiro / Riconsegna"}</label>
+                <RangeDate startDate={depart} endDate={ret} onChange={(r:any)=>{ const [a,b]=r as [Date|null,Date|null]; setDepart(a); setRet(b); }} placeholderText="seleziona intervallo" />
+              </>)}
             </div>
           </div>
         )}

@@ -49,3 +49,11 @@ html, body {
 .react-datepicker__day--selected,.react-datepicker__day--keyboard-selected{background:#facc15; color:#111}
 .react-datepicker__day--today{border:1px solid rgba(250,204,21,.6)}
 .react-datepicker__month-container{padding:6px}
+/* Datepicker: popover sopra tutto e tema dark pulito */
+.dp-popper { z-index: 60 }
+.react-datepicker{background:#0b0b0c;border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;font-size:14px}
+.react-datepicker__header{background:#0b0b0c;border-bottom:1px solid rgba(255,255,255,.1)}
+.react-datepicker__day-name,.react-datepicker__day{color:rgba(255,255,255,.85)}
+.react-datepicker__day--selected,.react-datepicker__day--keyboard-selected{background:#facc15;color:#111}
+.react-datepicker__day--today{outline:1px solid rgba(250,204,21,.6)}
+.react-datepicker__month-dropdown,.react-datepicker__year-dropdown{background:#0b0b0c;border:1px solid rgba(255,255,255,.1)}
