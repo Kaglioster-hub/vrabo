@@ -37,3 +37,7 @@ html, body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+/* UX tweaks */
+.input{height:44px;font-size:14.5px}
+.btn{height:42px}
+@media (max-width:640px){.h1-grad{font-size:1.6rem}.btn{width:100%;justify-content:center}.input{height:48px}}
