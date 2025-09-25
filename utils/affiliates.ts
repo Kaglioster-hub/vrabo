@@ -72,3 +72,11 @@ export function rentalcarsLink(city: string, pick: string, drop: string) {
   });
   return `${base}?${params.toString()}`;
 }
+import { withUTM, withRef } from "@/utils/utm";
+export function providerLink(base: string, key: string, referralParam?: string, extra?: Record<string,string>){
+  let url = base;
+  if (extra && Object.keys(extra).length){ const u=new URL(url); for (const [k,v] of Object.entries(extra)) u.searchParams.set(k,String(v)); url=u.toString(); }
+  url = withRef(url, key, referralParam);
+  url = withUTM(url);
+  return url;
+}
