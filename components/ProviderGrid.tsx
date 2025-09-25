@@ -3,7 +3,6 @@ import { providerLink } from "@/utils/affiliates";
 import { type Provider } from "@/config/providers";
 import { type Deal } from "@/config/deals";
 import { bestLogoFor, fallbackLogo } from "@/utils/logo";
-
 export default function ProviderGrid({ items, deals }: { items: Provider[]; deals: Record<string, Deal>; }) {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -26,9 +25,7 @@ export default function ProviderGrid({ items, deals }: { items: Provider[]; deal
               </div>
             )}
             {d.expires && <div className="text-xs text-white/60">Scade: {d.expires}</div>}
-            <div className="mt-2">
-              <a className="btn btn-primary" href={href} target="_blank" rel="nofollow">Vai all&apos;offerta</a>
-            </div>
+            <div className="mt-2"><a className="btn btn-primary" href={href} target="_blank" rel="nofollow">Vai all&apos;offerta</a></div>
           </div>
         );
       })}

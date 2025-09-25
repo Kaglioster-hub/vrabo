@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PlaneTakeoff, PlaneLanding, Search, Users, Shuffle, LocateFixed, X, BedDouble, Car, Phone, CreditCard } from "lucide-react";
 import { Airport, displayAirport, TOP_AIRPORTS } from "@/utils/airports";
 import AirportAutocomplete, { type Option } from "@/components/AirportAutocomplete";
+import CityAutocomplete, { type CityOpt } from "@/components/CityAutocomplete";
 import CountryAutocomplete, { type COpt } from "@/components/CountryAutocomplete";
 import { saveRecent, loadRecent } from "@/utils/storage";
 import Link from "next/link";
@@ -19,7 +20,6 @@ const COUNTRIES = ["Italia","Spagna","Francia","Germania","USA","Regno Unito","T
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("flight");
-
   // voli
   const [from, setFrom] = useState<Option | null>(null);
   const [to, setTo] = useState<Option | null>(null);
@@ -29,11 +29,12 @@ export default function Home() {
   const [adults, setAdults] = useState(1);
   const [initialList, setInitialList] = useState<Airport[]>([]);
   const [recents, setRecents] = useState<Recent[]>([]);
-
   // telco/finance
   const [country, setCountry] = useState<COpt|null>(null);
   const [dealsTelco, setDealsTelco] = useState<Record<string, any>>({});
   const [dealsFin, setDealsFin] = useState<Record<string, any>>({});
+  // stay city
+  const [cityTo, setCityTo] = useState<CityOpt|null>(null);
 
   useEffect(() => {
     (async () => {
@@ -55,12 +56,13 @@ export default function Home() {
   }
 
   const canSearchFlight = mode==="flight" && from?.value && to?.value && depart;
-  const canSearchStay   = mode==="stay"   && to?.value && depart && ret;
+  const canSearchStay   = mode==="stay"   && cityTo?.value && depart && ret;
   const canSearchCar    = mode==="car"    && to?.value && depart && ret;
+
   const qCommon = `from=${from?.value||""}&to=${to?.value||""}&depart=${depart?.toISOString().slice(0,10)||""}${ret? "&return="+ret.toISOString().slice(0,10):""}&adults=${adults}`;
   const searchHref =
     mode==="flight" ? (canSearchFlight ? `/search?mode=flight&${qCommon}${oneWay? "&oneway=1":""}` : "#") :
-    mode==="stay"   ? (canSearchStay   ? `/search?mode=stay&${qCommon}` : "#") :
+    mode==="stay"   ? (canSearchStay   ? `/search?mode=stay&to=${encodeURIComponent(cityTo!.value)}&depart=${depart?.toISOString().slice(0,10)}&return=${ret?.toISOString().slice(0,10)}&adults=${adults}` : "#") :
     mode==="car"    ? (canSearchCar    ? `/search?mode=car&${qCommon}` : "#") :
     mode==="telco"  ? (country ? `/search?mode=telco&country=${encodeURIComponent(country.value)}` : "#") :
                       `/search?mode=finance`;
@@ -74,7 +76,7 @@ export default function Home() {
   const Suggest = () => (
     <div className="text-xs text-white/60">
       {mode==="flight" && <>Suggerimenti:&nbsp;{TOP_AIRPORTS.map(a=> <button key={a} onClick={()=>!from?setFrom({label:a,value:a}):setTo({label:a,value:a})} className="mx-1 underline hover:text-white">{a}</button>)}</>}
-      {mode==="stay" && <>Città popolari:&nbsp;{CITIES.map(c=> <button key={c} onClick={()=>setTo({label:c,value:c})} className="mx-1 underline hover:text-white">{c}</button>)}</>}
+      {mode==="stay" && <>Città popolari:&nbsp;{CITIES.map(c=> <button key={c} onClick={()=>setCityTo({label:c,value:c})} className="mx-1 underline hover:text-white">{c}</button>)}</>}
       {mode==="car" && <>Luoghi comuni:&nbsp;{CAR_PLACES.map(c=> <button key={c} onClick={()=>setTo({label:c,value:c})} className="mx-1 underline hover:text-white">{c}</button>)}</>}
       {mode==="telco" && <>Paesi eSIM:&nbsp;{COUNTRIES.map(c=> <button key={c} onClick={()=>setCountry({label:c,value:c})} className="mx-1 underline hover:text-white">{c}</button>)}</>}
     </div>
@@ -134,16 +136,31 @@ export default function Home() {
           </div>
         )}
 
-        {/* STAY / CAR */}
-        {mode!=="flight" && (mode==="stay" || mode==="car") && (
+        {/* STAY */}
+        {mode==="stay" && (
           <div className="grid md:grid-cols-[1fr_1fr] gap-4 mt-6">
             <div className="space-y-3">
-              <label className="text-sm text-white/70">{mode==="stay" ? "Destinazione" : "Luogo"}</label>
-              <AirportAutocomplete name="to" placeholder={mode==="stay" ? "Dove vuoi dormire?" : "Città o aeroporto di ritiro"} value={to} onChange={setTo} onQuery={()=>{}} initialList={initialList} />
+              <label className="text-sm text-white/70">Destinazione</label>
+              <CityAutocomplete name="to" placeholder="Città, zona o POI" value={cityTo} onChange={setCityTo}/>
               <Suggest/>
             </div>
             <div className="space-y-3">
-              <label className="text-sm text-white/70">{mode==="stay" ? "Check-in / Check-out" : "Ritiro / Riconsegna"}</label>
+              <label className="text-sm text-white/70">Check-in / Check-out</label>
+              <RangeDate startDate={depart} endDate={ret} onChange={(r:any)=>{ const [a,b]=r as [Date|null,Date|null]; setDepart(a); setRet(b); }} placeholderText="seleziona intervallo" />
+            </div>
+          </div>
+        )}
+
+        {/* CAR */}
+        {mode==="car" && (
+          <div className="grid md:grid-cols-[1fr_1fr] gap-4 mt-6">
+            <div className="space-y-3">
+              <label className="text-sm text-white/70">Luogo</label>
+              <AirportAutocomplete name="to" placeholder="Città o aeroporto di ritiro" value={to} onChange={setTo} onQuery={()=>{}} initialList={initialList} />
+              <Suggest/>
+            </div>
+            <div className="space-y-3">
+              <label className="text-sm text-white/70">Ritiro / Riconsegna</label>
               <RangeDate startDate={depart} endDate={ret} onChange={(r:any)=>{ const [a,b]=r as [Date|null,Date|null]; setDepart(a); setRet(b); }} placeholderText="seleziona intervallo" />
             </div>
           </div>
@@ -176,14 +193,15 @@ export default function Home() {
           </div>
         )}
 
-        {/* CTA per voli/hotel/auto */}
+        {/* CTA per voli/stay/car */}
         {(mode==="flight" || mode==="stay" || mode==="car") && (
           <div className="mt-6 flex flex-wrap gap-3 items-center">
             <Link href={searchHref} onClick={commitRecent} className={"btn btn-primary text-base px-5 py-3" + ((mode==="flight"&&canSearchFlight)||(mode==="stay"&&canSearchStay)||(mode==="car"&&canSearchCar) ? "" : " pointer-events-none opacity-50")}>
               <Search size={18}/> Cerca
             </Link>
             {mode==="flight" && (!from?.value || !to?.value || !depart) && (<span className="text-sm text-white/60">Compila { !from?.value ? "origine" : !to?.value ? "destinazione" : "data andata" } per procedere.</span>)}
-            {(mode==="stay" || mode==="car") && (!to?.value || !depart || !ret) && (<span className="text-sm text-white/60">Seleziona destinazione e intervallo date.</span>)}
+            {mode==="stay" && (!cityTo?.value || !depart || !ret) && (<span className="text-sm text-white/60">Seleziona destinazione e intervallo date.</span>)}
+            {mode==="car" && (!to?.value || !depart || !ret) && (<span className="text-sm text-white/60">Seleziona destinazione e intervallo date.</span>)}
           </div>
         )}
 

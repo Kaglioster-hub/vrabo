@@ -8,7 +8,6 @@ export default function CityAutocomplete({ placeholder, value, onChange, name }:
 }) {
   const [open,setOpen]=useState(false); const [q,setQ]=useState(""); const [items,setItems]=useState<CityOpt[]>([]); const [hi,setHi]=useState(0);
   const ref = useRef<HTMLInputElement>(null);
-
   useEffect(()=>{ const f=(e:MouseEvent)=>{const el=e.target as HTMLElement; if(!ref.current) return; if(!ref.current.parentElement?.contains(el)) setOpen(false)}; document.addEventListener("mousedown",f); return()=>document.removeEventListener("mousedown",f);},[]);
   useEffect(()=>{ const c=new AbortController(); const t=setTimeout(async()=>{
     const url = `/api/cities?${q.length<2?"top=1":("q="+encodeURIComponent(q))}`;
@@ -16,7 +15,6 @@ export default function CityAutocomplete({ placeholder, value, onChange, name }:
       setItems((d.results||[]).map((x:any)=>({label:`${x.name}${x.country?" · "+x.country:""}`, value:x.name, country:x.country})));
     }catch{}
   },150); return()=>{ clearTimeout(t); c.abort(); };},[q]);
-
   function choose(i:number){ const o=items[i]; if(!o) return; onChange(o); setOpen(false); setQ(""); }
   function clear(){ onChange(null); setQ(""); ref.current?.focus(); }
   const showText = (open||q) ? q : (value?.label||"");
