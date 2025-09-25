@@ -1,79 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { flightPreviewAdapters } from "@/utils/flights/adapters";
 
-export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
-type Leg = { departure: string; arrival: string; duration: number; carrier: string; flight_no: string };
-type Option = {
-  provider: "KIWI";
-  price: number;
-  currency: string;
-  duration: number; // minutes
-  stops: number;
-  score: number;    // qualità/prezzo
-  summary: string;
-  deepLink?: string;
-  legs: Leg[];
-};
+export async function GET(req: Request) {
+  const u = new URL(req.url);
+  const from   = (u.searchParams.get("from")||"").toUpperCase();
+  const to     = (u.searchParams.get("to")||"").toUpperCase();
+  const depart = u.searchParams.get("depart")||"";
+  const ret    = u.searchParams.get("ret")||"";
+  const adults = Number(u.searchParams.get("adults")||"1") || 1;
+  if (!from || !to || !depart) return NextResponse.json({ error:"missing params" }, { status:400 });
 
-function scoreOf(p: number, durMin: number, stops: number) {
-  // euristica semplice: più basso è meglio
-  return p + (durMin * 0.8) + (stops * 40);
-}
+  const provParam = (u.searchParams.get("prov")||"ALL").toUpperCase();
+  const keys = provParam==="ALL"
+    ? Object.keys(flightPreviewAdapters)
+    : provParam.split(",").map(s=>s.trim()).filter(Boolean).filter(k=>flightPreviewAdapters[k]);
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const from = (url.searchParams.get("from")||"").toUpperCase();
-  const to   = (url.searchParams.get("to")||"").toUpperCase();
-  const depart = url.searchParams.get("depart")||"";
-  const ret    = url.searchParams.get("ret")||"";
-  const adults = url.searchParams.get("adults")||"1";
+  const q = { from, to, depart, ret: ret || undefined, adults };
 
-  const API = process.env.KIWI_TEQUILA_KEY;
-  if (!API || !from || !to || !depart) {
-    return NextResponse.json({ provider:"KIWI", items:[] as Option[] }, { headers: { "Cache-Control":"no-store" }});
-  }
+  const entries = await Promise.all(keys.map(async (k) => {
+    try { return [k, await flightPreviewAdapters[k](q)] as const; }
+    catch { return [k, []] as const; }
+  }));
 
-  const params = new URLSearchParams({
-    fly_from: from, fly_to: to,
-    date_from: depart, date_to: depart,
-    return_from: ret || depart, return_to: ret || depart,
-    adults, vehicle_type:"aircraft",
-    sort:"price", limit:"20", curr:"EUR"
-  });
+  const results: Record<string, any[]> = {};
+  entries.forEach(([k, v]) => { results[k] = v; });
 
-  const r = await fetch("https://tequila-api.kiwi.com/v2/search?"+params.toString(), {
-    headers: { apikey: API }
-  });
-
-  if (!r.ok) {
-    return NextResponse.json({ provider:"KIWI", items:[] as Option[] }, { headers: { "Cache-Control":"no-store" }});
-  }
-
-  const j = await r.json();
-  const items: Option[] = (j?.data||[]).map((it: any) => {
-    const legs: Leg[] = (it.route||[]).map((s:any)=>({
-      departure: s.local_departure,
-      arrival:   s.local_arrival,
-      duration:  s.duration?.total ? Math.round(s.duration.total/60) : 0,
-      carrier:   s.airline,
-      flight_no: String(s.flight_no||""),
-    }));
-    const durMin = (it.duration?.total ? Math.round(it.duration.total/60) : Math.round((it.duration||0)/60));
-    const stops = Math.max(0, (it.route?.length||1) - 1);
-    const s = scoreOf(it.price, durMin, stops);
-    const summary = `${stops===0?"Diretto":stops===1?"1 scalo":stops+" scali"} • ${Math.floor(durMin/60)}h ${durMin%60}m`;
-    return {
-      provider:"KIWI",
-      price: it.price,
-      currency: (j.currency||"EUR"),
-      duration: durMin,
-      stops,
-      score: s,
-      summary,
-      deepLink: it.deep_link,
-      legs
-    } as Option;
-  }).sort((a:any,b:any)=> a.score - b.score).slice(0,3);
-
-  return NextResponse.json({ provider:"KIWI", items }, { headers: { "Cache-Control":"no-store" }});
+  return NextResponse.json(
+    { providers: keys, results },
+    { headers: { "Cache-Control":"public, s-maxage=60, stale-while-revalidate=60" } }
+  );
 }
