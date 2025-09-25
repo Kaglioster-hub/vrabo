@@ -1,0 +1,37 @@
+{
+  "name": "vrabo-core-enterprise",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@vercel/analytics": "1.2.2",
+    "autoprefixer": "10.4.20",
+    "clsx": "2.1.1",
+    "framer-motion": "11.3.31",
+    "fuse.js": "7.0.0",
+    "i18next": "23.10.1",
+    "i18next-browser-languagedetector": "7.2.1",
+    "lucide-react": "0.447.0",
+    "next": "15.5.3",
+    "postcss": "8.4.39",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-i18next": "15.0.2",
+    "tailwindcss": "3.4.13"
+  },
+  "devDependencies": {
+    "@types/node": "22.7.5",
+    "@types/react": "18.3.5",
+    "@types/react-dom": "18.3.0",
+    "eslint": "9.13.0",
+    "eslint-config-next": "15.5.3",
+    "typescript": "5.6.2"
+  },
+  "packageManager": "pnpm@9.12.0"
+}

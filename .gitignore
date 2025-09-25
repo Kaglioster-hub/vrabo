@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+
+# Testing
+coverage
+
+# Next.js
+.next/
+out/
+
+# Production
+build
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+.vercel
+.idea
+.vscode
+dist
+
+.vercel

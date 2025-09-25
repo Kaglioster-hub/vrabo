@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+
+    <!-- Outer neon glow -->
+    <filter id="outerGlow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="30" result="blur"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.15  0 0 0 0 0.62  0 0 0 0 0.98  0 0 0 0.9 0" result="blue"/>
+      <feMerge>
+        <feMergeNode in="blue"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Inner soft glow -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" result="sg"/>
+      <feMerge>
+        <feMergeNode in="sg"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Stroke style -->
+    <style>
+      .stroke-outer{stroke:url(#blueGrad);stroke-width:28;stroke-linejoin:round;stroke-linecap:round;}
+      .stroke-inner{stroke:url(#blueGrad);stroke-width:16;stroke-linejoin:round;stroke-linecap:round;opacity:.9}
+      .lines{stroke:url(#blueGrad);stroke-width:12;opacity:.55}
+    </style>
+  </defs>
+
+  <!-- Transparent background -->
+  <rect width="1024" height="1024" fill="transparent"/>
+
+  <!-- Diamond path -->
+  <g id="mark" filter="url(#outerGlow)">
+    <polygon id="diamond" points="512,120 220,360 512,904 804,360" fill="none" class="stroke-outer"/>
+    <!-- Top facets -->
+    <polyline points="310,360 430,220 594,220 714,360" fill="none" class="lines"/>
+    <!-- Side facets -->
+    <polyline points="260,410 430,410" class="lines" fill="none"/>
+    <polyline points="564,410 764,410" class="lines" fill="none"/>
+    <!-- Bottom facets -->
+    <polyline points="420,610 512,780 604,610" class="lines" fill="none"/>
+  </g>
+
+  <!-- Controller body -->
+  <g id="controller" filter="url(#softGlow)">
+    <path d="
+      M 350 560
+      C 350 500, 400 470, 455 470
+      L 569 470
+      C 624 470, 674 500, 674 560
+      C 674 605, 650 640, 620 640
+      C 600 640, 585 628, 566 608
+      C 548 589, 534 580, 512 580
+      C 490 580, 476 589, 458 608
+      C 439 628, 424 640, 404 640
+      C 374 640, 350 605, 350 560 Z"
+      fill="url(#blueGrad)" opacity="0.9" stroke="url(#blueGrad)" stroke-width="10"/>
+    <!-- D-pad -->
+    <g opacity=".95">
+      <rect x="415" y="515" width="30" height="90" rx="8" fill="#0EA5FF"/>
+      <rect x="385" y="545" width="90" height="30" rx="8" fill="#0EA5FF"/>
+    </g>
+    <!-- ABXY -->
+    <circle cx="612" cy="528" r="16" fill="#93C5FD"/>
+    <circle cx="646" cy="560" r="16" fill="#93C5FD"/>
+    <circle cx="580" cy="560" r="16" fill="#93C5FD"/>
+    <circle cx="612" cy="592" r="16" fill="#93C5FD"/>
+  </g>
+
+  <!-- Diamond outline on top for crispness -->
+  <polygon points="512,120 220,360 512,904 804,360" fill="none" class="stroke-outer"/>
+</svg>

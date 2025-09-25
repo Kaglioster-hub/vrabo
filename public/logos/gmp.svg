@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#0D0D0D"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer circle -->
+  <circle cx="256" cy="256" r="244" fill="url(#bg)" stroke="#00FF88" stroke-width="8"/>
+
+  <!-- Nine-point star (stylized) -->
+  <g transform="translate(256,256)">
+    <g fill="none" stroke="#7C3AED" stroke-width="6" filter="url(#glow)">
+      <!-- Draw 9 long + 9 short rays -->
+      <!-- Rays -->
+      <g id="rays">
+        <line x1="0" y1="-190" x2="0" y2="-230"/>
+        <line x1="0" y1="190" x2="0" y2="230"/>
+        <line x1="-190" y1="0" x2="-230" y2="0"/>
+        <line x1="190" y1="0" x2="230" y2="0"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Create 9-fold symmetry for the star via paths -->
+  <g transform="translate(256,256)">
+    <g fill="none" stroke="#7C3AED" stroke-width="6" opacity="0.9">
+      <!-- Draw 9 spikes by rotation -->
+      <!-- Use path triangle spikes -->
+      <path d="M 160.0 18.0 L 160.0 -18.0 L 220.0 0.0 Z" />
+      <path d="M 111.0 116.6 L 134.1 89.1 L 168.5 141.4 Z" />
+      <path d="M 10.1 160.7 L 45.5 154.4 L 38.2 216.7 Z" />
+      <path d="M -95.6 129.6 L -64.4 147.6 L -110.0 190.5 Z" />
+      <path d="M -156.5 37.8 L -144.2 71.6 L -206.7 75.2 Z" />
+      <path d="M -144.2 -71.6 L -156.5 -37.8 L -206.7 -75.2 Z" />
+      <path d="M -64.4 -147.6 L -95.6 -129.6 L -110.0 -190.5 Z" />
+      <path d="M 45.5 -154.4 L 10.1 -160.7 L 38.2 -216.7 Z" />
+      <path d="M 134.1 -89.1 L 111.0 -116.6 L 168.5 -141.4 Z" />
+    </g>
+  </g>
+
+  <!-- Monkey face -->
+  <g transform="translate(256,256)">
+    <!-- Ears -->
+    <circle cx="-110" cy="-10" r="48" fill="#1a1a1a" stroke="#00FF88" stroke-width="6"/>
+    <circle cx="110" cy="-10" r="48" fill="#1a1a1a" stroke="#00FF88" stroke-width="6"/>
+    <!-- Head -->
+    <ellipse cx="0" cy="0" rx="140" ry="120" fill="#1a1a1a" stroke="#00FF88" stroke-width="8"/>
+    <!-- Face patch -->
+    <ellipse cx="0" cy="10" rx="90" ry="70" fill="#222222" stroke="#00FF88" stroke-width="4"/>
+    <!-- Eyes -->
+    <circle cx="-30" cy="-5" r="10" fill="#00FF88"/>
+    <circle cx="30" cy="-5" r="10" fill="#00FF88"/>
+    <!-- Smile -->
+    <path d="M -40 25 Q 0 55 40 25" stroke="#00FF88" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- Headphones band -->
+    <path d="M -120 -40 Q 0 -120 120 -40" stroke="#00FF88" stroke-width="14" fill="none" />
+    <!-- Headphone cups -->
+    <rect x="-150" y="-40" width="40" height="80" rx="16" fill="#00FF88"/>
+    <rect x="110" y="-40" width="40" height="80" rx="16" fill="#00FF88"/>
+  </g>
+</svg>
