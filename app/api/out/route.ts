@@ -29,14 +29,14 @@ export async function GET(req: NextRequest) {
 
   let target = "";
   if (mode==="flight") {
-    target = buildFlightLink(prov, {
+    target = buildFlightLink(prov, { 
       from: url.searchParams.get("from")||"",
       to: url.searchParams.get("to")||"",
       depart: url.searchParams.get("depart")||"",
       ret: url.searchParams.get("ret")||"",
       adults: url.searchParams.get("adults")||"1",
       sort: sort as any
-    });
+    , sort: url.searchParams.get("sort") as any });
   } else if (mode==="stay") {
     target = buildHotelLink(prov, {
       city: url.searchParams.get("city")||url.searchParams.get("to")||"",
@@ -76,3 +76,4 @@ export async function GET(req: NextRequest) {
   res.cookies.set("vrabo_sid", sid, { path:"/", sameSite:"Lax", maxAge:60*60*24*365 });
   return res;
 }
+
